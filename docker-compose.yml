@@ -488,13 +488,23 @@ networks:
 volumes:
   # Storage for email files
   vmail-vol-1:
+    external: true
   # Storage for attachments (deduplicated)
   vmail-attachments-vol-1:
+    external: true
   mysql-vol-1:
+    external: true
   mysql-socket-vol-1:
+    external: true
   redis-vol-1:
+    external: true
   rspamd-vol-1:
+    external: true
   solr-vol-1:
+    external: true
   postfix-vol-1:
+    external: true
   crypt-vol-1:
+    external: true
   sogo-web-vol-1:
+    external: true
