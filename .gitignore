@@ -37,4 +37,4 @@ diff_before_update_*
 .github/
 docker-compose.override.yml
 refresh_images.sh
-data/mailman/
+data/conf/mailman/

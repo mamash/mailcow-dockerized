@@ -485,8 +485,8 @@ services:
         - 25
         - 80
       volumes:
-        - ./data/mailman/mm_cfg.py:/etc/mailman/mm_cfg.py
-        - ./data/mailman/virtual:/etc/postfix/virtual
+        - ./data/conf/mailman/mm_cfg.py:/etc/mailman/mm_cfg.py
+        - ./data/conf/mailman/virtual:/etc/postfix/virtual
         - mailman-archives:/var/lib/mailman/archives
         - mailman-lib:/var/lib/mailman
         - mailman-postfix:/var/spool/postfix
