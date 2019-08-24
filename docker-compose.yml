@@ -490,6 +490,9 @@ services:
         - mailman-archives:/var/lib/mailman/archives
         - mailman-lib:/var/lib/mailman
         - mailman-postfix:/var/spool/postfix
+      dns:
+        - ${IPV4_NETWORK:-172.22.1}.254
+      hostname: mailman
       networks:
         mailcow-network:
           aliases:
