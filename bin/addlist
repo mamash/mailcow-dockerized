@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  cat <<EOF
+
+Usage:
+
+  $0 <list_address>
+
+EOF
+  exit 1
+fi
+
+list_name=${1%@*}
+domain_name=${1#*@}
+base_dir=$(cd $(dirname $0)/..; pwd)
+. ${base_dir}/.env
+
+if docker-compose exec mailman list_lists -b | grep -qw ${list_name}; then
+  echo "List already exists."
+  exit 0
+else
+  docker-compose exec mailman postmap /var/lib/mailman/data/virtual-mailman
+  docker-compose exec mailman newlist -q -e ${domain_name} -u ${domain_name} ${list_name} ${MAILMAN_ADMINMAIL} ${MAILMAN_ADMINPASS}
+fi

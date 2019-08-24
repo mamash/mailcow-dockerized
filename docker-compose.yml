@@ -474,6 +474,27 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock:ro
         - /lib/modules:/lib/modules:ro
 
+    mailman:
+      build: data/Dockerfiles/mailman
+      environment:
+        - MAILMAN_URLHOST
+        - MAILMAN_EMAILHOST
+        - MAILMAN_ADMINMAIL
+        - MAILMAN_ADMINPASS
+      expose:
+        - 25
+        - 80
+      volumes:
+        - ./data/mailman/mm_cfg.py:/etc/mailman/mm_cfg.py
+        - ./data/mailman/virtual:/etc/postfix/virtual
+        - mailman-archives:/var/lib/mailman/archives
+        - mailman-lib:/var/lib/mailman
+        - mailman-postfix:/var/spool/postfix
+      networks:
+        mailcow-network:
+          aliases:
+            - mailman
+
 networks:
   mailcow-network:
     driver: bridge
@@ -508,4 +529,8 @@ volumes:
   crypt-vol-1:
     external: true
   sogo-web-vol-1:
+    external: true
+  mailman-lib:
+    external: true
+  mailman-postfix:
     external: true
