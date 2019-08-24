@@ -530,6 +530,8 @@ volumes:
     external: true
   sogo-web-vol-1:
     external: true
+  mailman-archives:
+    external: true
   mailman-lib:
     external: true
   mailman-postfix:
