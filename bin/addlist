@@ -21,5 +21,5 @@ if docker-compose exec mailman list_lists -b | grep -qw ${list_name}; then
   exit 0
 else
   docker-compose exec mailman postmap /var/lib/mailman/data/virtual-mailman
-  docker-compose exec mailman newlist -q -e ${domain_name} -u ${domain_name} ${list_name} ${MAILMAN_ADMINMAIL} ${MAILMAN_ADMINPASS}
+  docker-compose exec mailman newlist -q -e ${domain_name} -u ${MAILMAN_URLHOST} ${list_name} ${MAILMAN_ADMINMAIL} ${MAILMAN_ADMINPASS}
 fi
