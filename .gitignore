@@ -48,5 +48,8 @@ data/gogs/
 data/conf/sogo/plist_ldap
 update_diffs/
 .github/
-docker-compose.override.yml
 refresh_images.sh
+data/Dockerfiles/mailman
+data/conf/postfix/mailman_rewrite_map.regexp
+data/web/mail/
+helper-scripts/mailman.sh
