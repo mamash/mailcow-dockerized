@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  cat <<EOF
+
+Usage:
+
+  $0 <add|del> <list_address>
+
+EOF
+  exit 1
+fi
+
+cmd=${1}
+list_name=${2%@*}
+domain_name=${2#*@}
+base_dir=$(cd $(dirname $0)/..; pwd)
+. ${base_dir}/.env
+
+docker-compose exec mailman list_lists -b | grep -qw ${list_name}
+list_exists=$?
+
+case ${cmd} in
+  add)
+    if [ $list_exists == 0 ]; then
+      echo "List $list_name already exists."
+    else
+      docker-compose exec mailman \
+        newlist -q -e ${domain_name} -u ${MAILMAN_URLHOST} ${list_name} \
+        ${MAILMAN_ADMINMAIL} ${MAILMAN_ADMINPASS}
+      changed=$?
+    fi
+    ;;
+  del)
+    if [ $list_exists == 0 ]; then
+      docker-compose exec mailman \
+        rmlist -a ${list_name}
+      changed=$?
+    else
+      echo "List $list_name doesn't exist"
+    fi
+    ;;
+esac
+
+if [ ${changed} == 0 ]; then
+  docker-compose restart mailman 
+fi

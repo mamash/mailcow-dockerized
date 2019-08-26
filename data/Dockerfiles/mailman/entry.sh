@@ -37,11 +37,9 @@ fi
 mmsitepass $MAILMAN_ADMINPASS
 
 # Fix Postfix settings
-postconf -e myhostname=$MAILMAN_URLHOST
+postconf -e myhostname=mailman
 postconf -e mydestination='$myhostname'
-postconf -e alias_maps=hash:/var/lib/mailman/data/aliases
-postconf -e virtual_alias_maps=hash:/var/lib/mailman/data/virtual-mailman 
-postconf -e virtual_alias_domains=hash:/etc/postfix/virtual
+postconf -e alias_maps=hash:/etc/aliases
 
 # 20MB size limit
 postconf -e mailbox_size_limit=20971520
@@ -54,11 +52,7 @@ if [ -n "$MAILMAN_SSL_CRT" ] && [ -n "$MAILMAN_SSL_KEY" ] && [ -n "$MAILMAN_SSL_
 fi
 
 # Init Postfix Config
-/usr/lib/mailman/bin/genaliases -q >> /etc/aliases
+/usr/lib/mailman/bin/genaliases -q > /etc/aliases
 newaliases
-
-touch /etc/postfix/virtual
-postmap /etc/postfix/virtual
-
 
 exec $@
