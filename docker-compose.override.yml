@@ -1,0 +1,36 @@
+version: '2.1'
+services:
+  mailman:
+    build: data/Dockerfiles/mailman
+    environment:
+      - MAILMAN_URLHOST
+      - MAILMAN_EMAILHOST
+      - MAILMAN_ADMINMAIL
+      - MAILMAN_ADMINPASS
+    expose:
+      - 25
+      - 80
+    volumes:
+      - mailman-archives:/var/lib/mailman/archives
+      - mailman-lib:/var/lib/mailman
+      - mailman-postfix:/var/spool/postfix
+    dns:
+      - ${IPV4_NETWORK:-172.22.1}.254
+    hostname: mailman
+    networks:
+      mailcow-network:
+        aliases:
+          - mailman
+volumes:
+  mailman-lib:
+  mailman-postfix:
+  mailman-archives:
+    driver_opts:
+      type: none
+      device: /mnt/mailcow/mailman-archives
+      o: bind
+  vmail-vol-1:
+    driver_opts:
+      type: none
+      device: /mnt/mailcow/vmail
+      o: bind
