@@ -416,7 +416,7 @@ $lang['acl']['syncjobs'] = 'Sync jobs';
 $lang['acl']['eas_reset'] = 'Reset EAS devices';
 $lang['acl']['sogo_profile_reset'] = 'Reset SOGo profile';
 $lang['acl']['quarantine'] = 'Quarantine actions';
-$lang['acl']['quarantine_notification'] = 'Quarantine notifications';
+$lang['acl']['quarantine_notification'] = 'Change quarantine notifications';
 $lang['acl']['quarantine_attachments'] = 'Quarantine attachments';
 $lang['acl']['alias_domains'] = 'Add alias domains';
 $lang['acl']['login_as'] = 'Login as mailbox user';
@@ -786,6 +786,8 @@ $lang['danger']['spam_learn_error'] = "Spam learn error: %s";
 $lang['success']['qlearn_spam'] = "Message ID %s was learned as spam and deleted";
 
 $lang['debug']['system_containers'] = 'System & Containers';
+$lang['debug']['started_on'] = 'Started on';
+$lang['debug']['jvm_memory_solr'] = 'JVM memory usage';
 $lang['debug']['solr_status'] = 'Solr status';
 $lang['debug']['solr_dead'] = 'Solr is starting, disabled or died.';
 $lang['debug']['logs'] = 'Logs';
