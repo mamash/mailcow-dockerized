@@ -43,6 +43,7 @@ $lang['success']['queue_command_success'] = "Queue command completed successfull
 $lang['danger']['unknown'] = "An unknown error occurred";
 $lang['danger']['malformed_username'] = "Malformed username";
 $lang['info']['awaiting_tfa_confirmation'] = "Awaiting TFA confirmation";
+$lang['info']['session_expires'] = "Your session will expire in about 15 seconds";
 $lang['success']['logged_in_as'] = "Logged in as %s";
 $lang['danger']['login_failed'] = "Login failed";
 $lang['danger']['set_acl_failed'] = "Failed to set ACL";
@@ -339,6 +340,11 @@ Each filter will be processed in the described order. Neither a failed script no
 $lang['info']['no_action'] = 'No action applicable';
 
 
+$lang['edit']['sogo_visible'] = 'Alias is visible in SOGo';
+$lang['edit']['sogo_visible_info'] = 'This option only affects objects, that can be displayed in SOGo (shared or non-shared alias addresses pointing to at least one local mailbox).';
+$lang['mailbox']['sogo_visible'] = 'Alias is visible in SOGo';
+$lang['mailbox']['sogo_visible_y'] = 'Show alias in SOGo';
+$lang['mailbox']['sogo_visible_n'] = 'Hide alias in SOGo';
 $lang['edit']['syncjob'] = 'Edit sync job';
 $lang['edit']['client_id'] = 'Client ID';
 $lang['edit']['client_secret'] = 'Client secret';
@@ -532,7 +538,11 @@ $lang['tfa']['tfa'] = "Two-factor authentication";
 $lang['tfa']['set_tfa'] = "Set two-factor authentication method";
 $lang['tfa']['yubi_otp'] = "Yubico OTP authentication";
 $lang['tfa']['key_id'] = "An identifier for your YubiKey";
+$lang['tfa']['init_u2f'] = "Initializing, please wait...";
+$lang['tfa']['start_u2f_validation'] = "Start validation";
+$lang['tfa']['reload_retry'] = "- (reload browser if the error persists)";
 $lang['tfa']['key_id_totp'] = "An identifier for your key";
+$lang['tfa']['error_code'] = "Error code";
 $lang['tfa']['api_register'] = 'mailcow uses the Yubico Cloud API. Please get an API key for your key <a href="https://upgrade.yubico.com/getapikey/" target="_blank">here</a>';
 $lang['tfa']['u2f'] = "U2F authentication";
 $lang['tfa']['none'] = "Deactivate";
