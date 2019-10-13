@@ -51,5 +51,8 @@ update_diffs/
 refresh_images.sh
 data/Dockerfiles/mailman
 data/conf/postfix/mailman_rewrite_map.regexp
+data/conf/rclone.conf
 data/web/mail/
+data/web/sendy/
+assets
 helper-scripts/mailman.sh
