@@ -2,8 +2,7 @@ version: '2.1'
 services:
 
     unbound-mailcow:
-      image: mailcow/unbound:1.9
-      build: ./data/Dockerfiles/unbound
+      image: mailcow/unbound:1.10
       environment:
         - TZ=${TZ}
       volumes:
@@ -19,6 +18,8 @@ services:
 
     mysql-mailcow:
       image: mariadb:10.3
+      depends_on:
+        - unbound-mailcow
       stop_grace_period: 45s
       volumes:
         - mysql-vol-1:/var/lib/mysql/
@@ -30,6 +31,7 @@ services:
         - MYSQL_DATABASE=${DBNAME}
         - MYSQL_USER=${DBUSER}
         - MYSQL_PASSWORD=${DBPASS}
+        - MYSQL_INITDB_SKIP_TZINFO=1
       restart: always
       ports:
         - "${SQL_PORT:-127.0.0.1:13306}:3306"
@@ -52,8 +54,7 @@ services:
             - redis
 
     clamd-mailcow:
-      image: mailcow/clamd:1.32
-      build: ./data/Dockerfiles/clamd
+      image: mailcow/clamd:1.33
       restart: always
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
@@ -68,8 +69,7 @@ services:
             - clamd
 
     rspamd-mailcow:
-      image: mailcow/rspamd:1.49
-      build: ./data/Dockerfiles/rspamd
+      image: mailcow/rspamd:1.56
       stop_grace_period: 30s
       depends_on:
         - nginx-mailcow
@@ -96,8 +96,7 @@ services:
             - rspamd
 
     php-fpm-mailcow:
-      image: mailcow/phpfpm:1.51
-      build: ./data/Dockerfiles/phpfpm
+      image: mailcow/phpfpm:1.54
       command: "php-fpm -d date.timezone=${TZ} -d expose_php=0"
       depends_on:
         - redis-mailcow
@@ -105,7 +104,7 @@ services:
         - ./data/hooks/dovecot:/hooks
         - ./data/web:/web:rw
         - ./data/conf/rspamd/dynmaps:/dynmaps:ro
-        - ./data/conf/rspamd/custom/:/rspamd_custom_maps:rw
+        - ./data/conf/rspamd/custom/:/rspamd_custom_maps
         - rspamd-vol-1:/var/lib/rspamd
         - mysql-socket-vol-1:/var/run/mysqld/
         - ./data/conf/sogo/:/etc/sogo/
@@ -145,8 +144,7 @@ services:
             - phpfpm
 
     sogo-mailcow:
-      image: mailcow/sogo:1.61
-      build: ./data/Dockerfiles/sogo
+      image: mailcow/sogo:1.63
       environment:
         - DBNAME=${DBNAME}
         - DBUSER=${DBUSER}
@@ -174,8 +172,9 @@ services:
             - sogo
 
     dovecot-mailcow:
-      image: mailcow/dovecot:1.93
-      build: ./data/Dockerfiles/dovecot
+      image: mailcow/dovecot:1.97
+      depends_on:
+        - mysql-mailcow
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
       cap_add:
@@ -228,8 +227,9 @@ services:
             - dovecot
 
     postfix-mailcow:
-      image: mailcow/postfix:1.41
-      build: ./data/Dockerfiles/postfix
+      image: mailcow/postfix:1.44
+      depends_on:
+        - mysql-mailcow
       volumes:
         - ./data/conf/postfix:/opt/postfix/conf
         - ./data/assets/ssl:/etc/ssl/mail/:ro
@@ -316,7 +316,6 @@ services:
       depends_on:
         - nginx-mailcow
       image: mailcow/acme:1.63
-      build: ./data/Dockerfiles/acme
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
       environment:
@@ -345,8 +344,7 @@ services:
             - acme
 
     netfilter-mailcow:
-      image: mailcow/netfilter:1.30
-      build: ./data/Dockerfiles/netfilter
+      image: mailcow/netfilter:1.31
       stop_grace_period: 30s
       depends_on:
         - dovecot-mailcow
@@ -367,10 +365,9 @@ services:
         - /lib/modules:/lib/modules:ro
 
     watchdog-mailcow:
-      image: mailcow/watchdog:1.61
+      image: mailcow/watchdog:1.62
       # Debug
       #command: /watchdog.sh
-      build: ./data/Dockerfiles/watchdog
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
       volumes:
@@ -400,9 +397,8 @@ services:
             - watchdog
 
     dockerapi-mailcow:
-      image: mailcow/dockerapi:1.35
+      image: mailcow/dockerapi:1.36
       restart: always
-      build: ./data/Dockerfiles/dockerapi
       oom_kill_disable: true
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
@@ -418,7 +414,6 @@ services:
 
     solr-mailcow:
       image: mailcow/solr:1.7
-      build: ./data/Dockerfiles/solr
       restart: always
       volumes:
         - solr-vol-1:/opt/solr/server/solr/dovecot-fts/data
@@ -436,7 +431,6 @@ services:
     olefy-mailcow:
       image: mailcow/olefy:1.2
       restart: always
-      build: ./data/Dockerfiles/olefy
       environment:
         - TZ=${TZ}
         - OLEFY_BINDADDRESS=0.0.0.0

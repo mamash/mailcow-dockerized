@@ -601,7 +601,12 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           case "mailbox":
             switch ($object) {
               case "all":
-                $domains = mailbox('get', 'domains');
+                if (empty($extra)) {
+                  $domains = mailbox('get', 'domains');
+                }
+                else {
+                  $domains = array($extra);
+                }
                 if (!empty($domains)) {
                   foreach ($domains as $domain) {
                     $mailboxes = mailbox('get', 'mailboxes', $domain);
@@ -940,7 +945,12 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           case "alias":
             switch ($object) {
               case "all":
-                $domains = array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains'));
+                if (empty($extra)) {
+                  $domains = array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains'));
+                }
+                else {
+                  $domains = array($extra);
+                }
                 if (!empty($domains)) {
                   foreach ($domains as $domain) {
                     $aliases = mailbox('get', 'aliases', $domain);
@@ -1244,6 +1254,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           break;
           case "alias":
             process_edit_return(mailbox('edit', 'alias', array_merge(array('id' => $items), $attr)));
+          break;
+          case "rspamd-map":
+            process_edit_return(rspamd('edit', array_merge(array('map' => $items), $attr)));
           break;
           case "app_links":
             process_edit_return(customize('edit', 'app_links', $attr));

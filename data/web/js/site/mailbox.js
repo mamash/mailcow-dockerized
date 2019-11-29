@@ -10,11 +10,11 @@ $(document).ready(function() {
       this._super();
       var self = this;
       var domains = [];
-      
+
       $.each(self.ft.rows.all, function(i, row){
         if((row.val().domain != null) && ($.inArray(row.val().domain, domains) === -1)) domains.push(row.val().domain);
       });
-      
+
       $form_grp = $('<div/>', {'class': 'form-group'})
         .append($('<label/>', {'class': 'sr-only', text: 'Domain'}))
         .prependTo(self.$form);
@@ -133,16 +133,15 @@ $(document).ready(function() {
     $(e.currentTarget).find('#sieveDataText').html('<pre style="font-size:14px;line-height:1.1">' + sieveScript + '</pre>');
   });
   // Disable submit button on script change
-	$('#script_data').on('keyup', function() {
+	$('.textarea-code').on('keyup', function() {
     $('#add_filter_btns > #add_sieve_script').attr({"disabled": true});
-    $('#validation_msg').html('-');
 	});
   // Validate script data
   $("#validate_sieve").click(function( event ) {
     event.preventDefault();
     var script = $('#script_data').val();
     $.ajax({
-      dataType: 'jsonp',
+      dataType: 'json',
       url: "/inc/ajax/sieve_validation.php",
       type: "get",
       data: { script: script },
@@ -234,6 +233,7 @@ jQuery(function($){
         {"name":"max_quota_for_mbox","title":lang.mailbox_quota,"breakpoints":"xs sm","style":{"width":"125px"}},
         {"name":"rl","title":"RL","breakpoints":"xs sm md lg","style":{"maxWidth":"100px","width":"100px"}},
         {"name":"backupmx","filterable": false,"style":{"maxWidth":"120px","width":"120px"},"title":lang.backup_mx,"breakpoints":"xs sm md lg"},
+        {"name":"domain_admins","title":lang.domain_admins,"style":{"word-break":"break-all","min-width":"200px"},"breakpoints":"xs sm md lg","filterable":(role == "admin"),"visible":(role == "admin")},
         {"name":"active","filterable": false,"style":{"maxWidth":"80px","width":"80px"},"title":lang.active},
         {"name":"action","filterable": false,"sortable": false,"style":{"text-align":"right","maxWidth":"240px","width":"240px"},"type":"html","title":lang.action,"breakpoints":"xs sm md"}
       ],

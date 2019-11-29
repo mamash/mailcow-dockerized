@@ -17,6 +17,7 @@ if (!isset($_SESSION['gal']) && $license_cache = $redis->Get('LICENSE_STATUS_CAC
     <li role="presentation"><a href="#tab-routing" aria-controls="tab-config" role="tab" data-toggle="tab"><?=$lang['admin']['routing'];?></a></li>
     <li role="presentation"><a href="#tab-sys-mails" aria-controls="tab-sys-mails" role="tab" data-toggle="tab"><?=$lang['admin']['sys_mails'];?></a></li>
     <li role="presentation"><a href="#tab-mailq" aria-controls="tab-mailq" role="tab" data-toggle="tab"><?=$lang['admin']['queue_manager'];?></a></li>
+    <li role="presentation"><a href="#tab-rspamdmaps" aria-controls="tab-rspamdmaps" role="tab" data-toggle="tab"><?=$lang['admin']['rspamd_global_filters'];?></a></li>
   </ul>
 
   <div class="row">
@@ -200,7 +201,7 @@ if (!isset($_SESSION['gal']) && $license_cache = $redis->Get('LICENSE_STATUS_CAC
           </div>
         </div>
     </div>
-  
+
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Rspamd UI</h3>
@@ -654,7 +655,7 @@ if (!isset($_SESSION['gal']) && $license_cache = $redis->Get('LICENSE_STATUS_CAC
         if (!empty($f2b_data['active_bans'])):
           foreach ($f2b_data['active_bans'] as $active_bans):
           ?>
-          <p><span class="label label-info" style="padding:4px;font-size:85%;"><span class="glyphicon glyphicon-filter"></span> <?=$active_bans['network'];?> (<?=$active_bans['banned_until'];?>) - 
+          <p><span class="label label-info" style="padding:4px;font-size:85%;"><span class="glyphicon glyphicon-filter"></span> <?=$active_bans['network'];?> (<?=$active_bans['banned_until'];?>) -
             <?php
             if ($active_bans['queued_for_unban'] == 0):
             ?>
@@ -1136,6 +1137,49 @@ if (!isset($_SESSION['gal']) && $license_cache = $redis->Get('LICENSE_STATUS_CAC
     </div>
   </div>
 
+  <div role="tabpanel" class="tab-pane" id="tab-rspamdmaps">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <?=$lang['admin']['rspamd_global_filters'];?>
+      </div>
+      <div class="panel-body">
+        <p><?=$lang['admin']['rspamd_global_filters_info'];?></p>
+        <div id="confirm_show_rspamd_global_filters" class="<?=($_SESSION['show_rspamd_global_filters'] === true) ? 'hidden' : '';?>">
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <label>
+                <input type="checkbox" id="show_rspamd_global_filters"> <?=$lang['admin']['rspamd_global_filters_agree'];?>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div id="rspamd_global_filters" class="<?=($_SESSION['show_rspamd_global_filters'] !== true) ? 'hidden' : '';?>">
+        <?php
+        foreach ($RSPAMD_MAPS as $rspamd_desc => $rspamd_map):
+        ?>
+        <hr>
+        <form class="form-horizontal" data-id="<?=$rspamd_map;?>" role="form" method="post">
+          <div class="form-group">
+            <label class="control-label col-sm-3" for="<?=$rspamd_map;?>"><?=$rspamd_desc;?><br><small><?=$rspamd_map;?></small></label>
+            <div class="col-sm-9">
+              <textarea id="<?=$rspamd_map;?>" spellcheck="false" autocorrect="off" autocapitalize="none" class="form-control textarea-code" rows="10" name="rspamd_map_data" required><?=file_get_contents('/rspamd_custom_maps/' . $rspamd_map);?></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-9">
+              <button class="btn btn-xs btn-default validate_rspamd_regex" data-regex-map="<?=$rspamd_map;?>" href="#"><?=$lang['add']['validate'];?></button>
+              <button class="btn btn-xs btn-success submit_rspamd_regex" data-action="edit_selected" data-id="<?=$rspamd_map;?>" data-item="<?=htmlspecialchars($rspamd_map);?>" data-api-url='edit/rspamd-map' data-api-attr='{}' href="#" disabled><?=$lang['edit']['save'];?></button>
+            </div>
+          </div>
+        </form>
+        <?php
+        endforeach;
+        ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div> <!-- /tab-content -->
   </div> <!-- /col-md-12 -->
   </div> <!-- /row -->
@@ -1155,6 +1199,7 @@ echo "var log_pagination_size = '". $LOG_PAGINATION_SIZE . "';\n";
 </script>
 <?php
 $js_minifier->add('/web/js/site/admin.js');
+$js_minifier->add('/web/js/presets/rspamd.js');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/footer.inc.php';
 } else {
 	header('Location: /');
