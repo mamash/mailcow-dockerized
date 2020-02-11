@@ -6,7 +6,7 @@ basedir=$(cd $(dirname $0)/..; pwd)
 cd ${basedir}
 
 echo "Running backup"
-#./helper-scripts/backup_and_restore.sh backup all
+./helper-scripts/backup_and_restore.sh backup all
 
 echo "Syncing to Backblaze"
 docker run --rm \
