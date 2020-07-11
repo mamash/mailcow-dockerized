@@ -28,7 +28,9 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           <br>
           <form class="form-horizontal" data-id="editalias" role="form" method="post">
             <input type="hidden" value="0" name="active">
+            <?php if (getenv('SKIP_SOGO') != "y") { ?>
             <input type="hidden" value="0" name="sogo_visible">
+            <?php } ?>
             <div class="form-group">
               <label class="control-label col-sm-2" for="address"><?=$lang['edit']['alias'];?></label>
               <div class="col-sm-10">
@@ -48,11 +50,13 @@ if (isset($_SESSION['mailcow_cc_role'])) {
                 <div class="checkbox">
                   <label><input class="goto_checkbox" type="checkbox" value="1" name="goto_ham" <?= ($result['goto'] == "ham@localhost") ? "checked" : null; ?>> <?=$lang['add']['goto_ham'];?></label>
                 </div>
+                <?php if (getenv('SKIP_SOGO') != "y") { ?>
                 <hr>
                 <div class="checkbox">
                   <label><input type="checkbox" value="1" name="sogo_visible" <?php if (isset($result['sogo_visible_int']) && $result['sogo_visible_int']=="1") { echo "checked"; }; ?>> <?=$lang['edit']['sogo_visible'];?></label>
                 </div>
                 <p class="help-block"><?=$lang['edit']['sogo_visible_info'];?></p>
+                <?php } ?>
               </div>
             </div>
             <hr>
@@ -97,7 +101,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
       ?>
       <h4><?=$lang['edit']['domain_admin'];?></h4>
       <br>
-      <form class="form-horizontal" data-id="editdomainadmin" role="form" method="post">
+      <form class="form-horizontal" data-id="editdomainadmin" role="form" method="post" autocomplete="off">
         <input type="hidden" value="0" name="active">
         <div class="form-group">
           <label class="control-label col-sm-2" for="username_new"><?=$lang['edit']['username'];?></label>
@@ -127,13 +131,13 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         <div class="form-group">
           <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
           <div class="col-sm-10">
-          <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="">
+          <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="" autocomplete="new-password">
           </div>
         </div>
         <div class="form-group">
           <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
           <div class="col-sm-10">
-          <input type="password" data-pwgen-field="true" class="form-control" name="password2">
+          <input type="password" data-pwgen-field="true" class="form-control" name="password2" autocomplete="new-password">
           </div>
         </div>
         <div class="form-group">
@@ -195,7 +199,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
       ?>
       <h4><?=$lang['edit']['domain_admin'];?></h4>
       <br>
-      <form class="form-horizontal" data-id="editadmin" role="form" method="post">
+      <form class="form-horizontal" data-id="editadmin" role="form" method="post" autocomplete="off">
         <input type="hidden" value="0" name="active">
         <div class="form-group">
           <label class="control-label col-sm-2" for="username_new"><?=$lang['edit']['username'];?></label>
@@ -206,13 +210,13 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         <div class="form-group">
           <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
           <div class="col-sm-10">
-          <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="">
+          <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="" autocomplete="new-password">
           </div>
         </div>
         <div class="form-group">
           <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
           <div class="col-sm-10">
-          <input type="password" data-pwgen-field="true" class="form-control" name="password2">
+          <input type="password" data-pwgen-field="true" class="form-control" name="password2" autocomplete="new-password">
           </div>
         </div>
         <div class="form-group">
@@ -378,6 +382,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <option value="s" <?=(isset($rl['frame']) && $rl['frame'] == 's') ? 'selected' : null;?>>msgs / second</option>
             <option value="m" <?=(isset($rl['frame']) && $rl['frame'] == 'm') ? 'selected' : null;?>>msgs / minute</option>
             <option value="h" <?=(isset($rl['frame']) && $rl['frame'] == 'h') ? 'selected' : null;?>>msgs / hour</option>
+            <option value="d" <?=(isset($rl['frame']) && $rl['frame'] == 'd') ? 'selected' : null;?>>msgs / day</option>
           </select>
         </div>
         <div class="form-group">
@@ -533,6 +538,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
                 <option value="s" <?=(isset($rl['frame']) && $rl['frame'] == 's') ? 'selected' : null;?>>msgs / second</option>
                 <option value="m" <?=(isset($rl['frame']) && $rl['frame'] == 'm') ? 'selected' : null;?>>msgs / minute</option>
                 <option value="h" <?=(isset($rl['frame']) && $rl['frame'] == 'h') ? 'selected' : null;?>>msgs / hour</option>
+                <option value="d" <?=(isset($rl['frame']) && $rl['frame'] == 'd') ? 'selected' : null;?>>msgs / day</option>
               </select>
             </div>
             <div class="form-group">
@@ -571,7 +577,6 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         <h4><?=$lang['edit']['mailbox'];?></h4>
         <form class="form-horizontal" data-id="editmailbox" role="form" method="post">
           <input type="hidden" value="default" name="sender_acl">
-          <input type="hidden" value="0" name="active">
           <input type="hidden" value="0" name="force_pw_update">
           <input type="hidden" value="0" name="sogo_access">
           <div class="form-group">
@@ -688,13 +693,13 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           <div class="form-group">
             <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
             <div class="col-sm-10">
-            <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="<?=$lang['edit']['unchanged_if_empty'];?>">
+            <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="<?=$lang['edit']['unchanged_if_empty'];?>" autocomplete="new-password">
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
             <div class="col-sm-10">
-            <input type="password" data-pwgen-field="true" class="form-control" name="password2">
+            <input type="password" data-pwgen-field="true" class="form-control" name="password2" autocomplete="new-password">
             </div>
           </div>
           <div data-acl="<?=$_SESSION['acl']['extend_sender_acl'];?>" class="form-group">
@@ -706,9 +711,11 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           </div>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-              <div class="checkbox">
-              <label><input type="checkbox" value="1" name="active" <?=($result['active_int']=="1") ? "checked" : null;?>> <?=$lang['edit']['active'];?></label>
-              </div>
+            <select name="active" class="form-control">
+              <option value="1" <?=($result['active_int']=="1") ? 'selected' : null;?>><?=$lang['edit']['active'];?></option>
+              <option value="2" <?=($result['active_int']=="2") ? 'selected' : null;?>><?=$lang['edit']['disable_login'];?></option>
+              <option value="0" <?=($result['active_int']=="0") ? 'selected' : null;?>><?=$lang['edit']['inactive'];?></option>
+            </select>
             </div>
           </div>
           <div class="form-group">
@@ -719,6 +726,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
               </div>
             </div>
           </div>
+          <?php if (getenv('SKIP_SOGO') != "y") { ?>
           <div data-acl="<?=$_SESSION['acl']['sogo_access'];?>" class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <div class="checkbox">
@@ -727,6 +735,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
               </div>
             </div>
           </div>
+          <?php } ?>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <button class="btn btn-success" data-action="edit_selected" data-id="editmailbox" data-item="<?=htmlspecialchars($result['username']);?>" data-api-url='edit/mailbox' data-api-attr='{}' href="#"><?=$lang['edit']['save'];?></button>
@@ -826,6 +835,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
                   <option value="s" <?=(isset($rl['frame']) && $rl['frame'] == 's') ? 'selected' : null;?>>msgs / second</option>
                   <option value="m" <?=(isset($rl['frame']) && $rl['frame'] == 'm') ? 'selected' : null;?>>msgs / minute</option>
                   <option value="h" <?=(isset($rl['frame']) && $rl['frame'] == 'h') ? 'selected' : null;?>>msgs / hour</option>
+                  <option value="d" <?=(isset($rl['frame']) && $rl['frame'] == 'd') ? 'selected' : null;?>>msgs / day</option>
                 </select>
               </div>
               <div class="form-group">
@@ -886,7 +896,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="password"><?=$lang['add']['password'];?></label>
               <div class="col-sm-10">
-                <input type="password" data-hibp="true" class="form-control" name="password" value="<?=htmlspecialchars($result['password'], ENT_QUOTES, 'UTF-8');?>">
+                <input type="text" data-hibp="true" class="form-control" name="password" value="<?=htmlspecialchars($result['password'], ENT_QUOTES, 'UTF-8');?>">
               </div>
             </div>
             <div class="form-group">
@@ -939,7 +949,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="password"><?=$lang['add']['password'];?></label>
               <div class="col-sm-10">
-                <input type="password" data-hibp="true" class="form-control" name="password" value="<?=htmlspecialchars($result['password'], ENT_QUOTES, 'UTF-8');?>">
+                <input type="text" data-hibp="true" class="form-control" name="password" value="<?=htmlspecialchars($result['password'], ENT_QUOTES, 'UTF-8');?>">
               </div>
             </div>
             <div class="form-group">
@@ -1233,8 +1243,8 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="mins_interval"><?=$lang['edit']['mins_interval'];?></label>
               <div class="col-sm-10">
-                <input type="number" class="form-control" name="mins_interval" min="1" max="3600" value="<?=htmlspecialchars($result['mins_interval'], ENT_QUOTES, 'UTF-8');?>" required>
-                <small class="help-block">1-3600</small>
+                <input type="number" class="form-control" name="mins_interval" min="1" max="43800" value="<?=htmlspecialchars($result['mins_interval'], ENT_QUOTES, 'UTF-8');?>" required>
+                <small class="help-block">1-43800</small>
               </div>
             </div>
             <div class="form-group">
@@ -1416,13 +1426,13 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
               <div class="col-sm-10">
-              <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="">
+              <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="" autocomplete="new-password">
               </div>
             </div>
             <div class="form-group">
               <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
               <div class="col-sm-10">
-              <input type="password" data-pwgen-field="true" class="form-control" name="password2">
+              <input type="password" data-pwgen-field="true" class="form-control" name="password2" autocomplete="new-password">
               </div>
             </div>
             <div class="form-group">

@@ -66,10 +66,11 @@ def notify_rcpt(rcpt, msg_count, quarantine_acl):
   else:
     with open('/templates/quarantine.tpl') as file_:
       template = Template(file_.read())
-  html = template.render(meta=meta_query, counter=msg_count, hostname=socket.gethostname(), quarantine_acl=quarantine_acl)
+  html = template.render(meta=meta_query, username=rcpt, counter=msg_count, hostname=socket.gethostname(), quarantine_acl=quarantine_acl)
   text = html2text.html2text(html)
   count = 0
   while count < 15:
+    count += 1
     try:
       server = smtplib.SMTP('postfix', 590, 'quarantine')
       server.ehlo()
@@ -85,8 +86,18 @@ def notify_rcpt(rcpt, msg_count, quarantine_acl):
       msg.attach(html_part)
       msg['To'] = str(rcpt)
       bcc = r.get('Q_BCC') or ""
+      redirect = r.get('Q_REDIRECT') or ""
       text = msg.as_string()
-      server.sendmail(msg['From'], [str(rcpt)] + [str(bcc)], text)
+      if bcc == '':
+        if redirect == '':
+          server.sendmail(msg['From'], str(rcpt), text)
+        else:
+          server.sendmail(msg['From'], str(redirect), text)
+      else:
+        if redirect == '':
+          server.sendmail(msg['From'], [str(rcpt)] + [str(bcc)], text)
+        else:
+          server.sendmail(msg['From'], [str(redirect)] + [str(bcc)], text)
       server.quit()
       for res in meta_query:
         query_mysql('UPDATE quarantine SET notified = 1 WHERE id = "%d"' % (res['id']), update = True)

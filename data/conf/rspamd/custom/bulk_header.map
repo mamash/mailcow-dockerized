@@ -1,4 +1,3 @@
-/X-CSA-Complaints: .*/i
 /X-EMV-Platform; .*/i
 /.*nur-1-click*/i
 /.*episerver.*/i
@@ -14,3 +13,5 @@
 /.*promio\.de.*/i
 /.*mailer-service\.com.*/i
 /.*mailer-service\.de.*/i
+/.*dynamic-lht.*/i
+/.*light-house-traffic.*/i

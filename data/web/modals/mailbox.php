@@ -13,7 +13,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
         <h3 class="modal-title"><?=$lang['mailbox']['add_mailbox'];?></h3>
       </div>
       <div class="modal-body">
-        <form class="form-horizontal" data-cached-form="true" data-id="add_mailbox" role="form">
+        <form class="form-horizontal" data-cached-form="true" data-id="add_mailbox" role="form" autocomplete="off">
           <div class="form-group">
             <label class="control-label col-sm-2" for="local_part"><?=$lang['add']['mailbox_username'];?></label>
             <div class="col-sm-10">
@@ -51,22 +51,25 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
           <div class="form-group">
             <label class="control-label col-sm-2" for="password"><?=$lang['add']['password'];?> (<a href="#" class="generate_password"><?=$lang['add']['generate'];?></a>)</label>
             <div class="col-sm-10">
-            <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="" required>
+            <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="" autocomplete="new-password" required>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2" for="password2"><?=$lang['add']['password_repeat'];?></label>
             <div class="col-sm-10">
-            <input type="password" data-pwgen-field="true" class="form-control" name="password2" placeholder="" required>
+            <input type="password" data-pwgen-field="true" class="form-control" name="password2" placeholder="" autocomplete="new-password" required>
             </div>
           </div>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-              <div class="checkbox">
-              <label><input type="checkbox" value="1" name="active" checked> <?=$lang['add']['active'];?></label>
-              </div>
+            <select name="active" class="form-control">
+              <option value="1" selected><?=$lang['add']['active'];?></option>
+              <option value="2"><?=$lang['add']['disable_login'];?></option>
+              <option value="0"><?=$lang['add']['inactive'];?></option>
+            </select>
             </div>
           </div>
+          <hr>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <button class="btn btn-default" data-action="add_item" data-id="add_mailbox" data-api-url='add/mailbox' data-api-attr='{}' href="#"><?=$lang['admin']['add'];?></button>
@@ -129,6 +132,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
             <input type="number" class="form-control" name="quota" value="10240" required>
             </div>
           </div>
+          <?php if (getenv('SKIP_SOGO') != "y") { ?>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <div class="checkbox">
@@ -137,6 +141,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
               </div>
             </div>
           </div>
+          <?php } ?>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <div class="checkbox">
@@ -155,6 +160,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
               <option value="s" <?=(isset($rl['frame']) && $rl['frame'] == 's') ? 'selected' : null;?>>msgs / second</option>
               <option value="m" <?=(isset($rl['frame']) && $rl['frame'] == 'm') ? 'selected' : null;?>>msgs / minute</option>
               <option value="h" <?=(isset($rl['frame']) && $rl['frame'] == 'h') ? 'selected' : null;?>>msgs / hour</option>
+              <option value="d" <?=(isset($rl['frame']) && $rl['frame'] == 'd') ? 'selected' : null;?>>msgs / day</option>
             </select>
             </div>
           </div>
@@ -177,11 +183,18 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
           <hr>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
+              <?php if (getenv('SKIP_SOGO') != "y") { ?>
               <button class="btn btn-default" data-action="add_item" data-id="add_domain" data-api-url='add/domain' data-api-attr='{}' href="#"><?=$lang['add']['add_domain_only'];?></button>
               <button class="btn btn-default" data-action="add_item" data-id="add_domain" data-api-url='add/domain' data-api-attr='{"restart_sogo":"1"}' href="#"><?=$lang['add']['add_domain_restart'];?></button>
+              <?php } else { ?>
+              <button class="btn btn-default" data-action="add_item" data-id="add_domain" data-api-url='add/domain' data-api-attr='{}' href="#"><?=$lang['add']['add'];?></button>
+              <?php } ?>
             </div>
           </div>
+          <?php // TODO: Separate SOGo-related text
+          if (getenv('SKIP_SOGO') != "y") { ?>
           <p><span class="glyphicon glyphicon-exclamation-sign text-danger"></span> <?=$lang['add']['post_domain_add'];?></p>
+          <?php } ?>
         </form>
       </div>
     </div>
@@ -289,11 +302,13 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
               <div class="checkbox">
                 <label><input class="goto_checkbox" type="checkbox" value="1" name="goto_ham"> <?=$lang['add']['goto_ham'];?></label>
               </div>
+              <?php if (getenv('SKIP_SOGO') != "y") { ?>
               <hr>
               <div class="checkbox">
                 <label><input type="checkbox" value="1" name="sogo_visible" checked> <?=$lang['edit']['sogo_visible'];?></label>
               </div>
               <p class="help-block"><?=$lang['edit']['sogo_visible_info'];?></p>
+              <?php } ?>
             </div>
           </div>
           <div class="form-group">
@@ -361,6 +376,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
               <option value="s" <?=(isset($rl['frame']) && $rl['frame'] == 's') ? 'selected' : null;?>>msgs / second</option>
               <option value="m" <?=(isset($rl['frame']) && $rl['frame'] == 'm') ? 'selected' : null;?>>msgs / minute</option>
               <option value="h" <?=(isset($rl['frame']) && $rl['frame'] == 'h') ? 'selected' : null;?>>msgs / hour</option>
+              <option value="d" <?=(isset($rl['frame']) && $rl['frame'] == 'd') ? 'selected' : null;?>>msgs / day</option>
             </select>
             </div>
           </div>
@@ -441,8 +457,8 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
           <div class="form-group">
             <label class="control-label col-sm-2" for="mins_interval"><?=$lang['add']['mins_interval'];?></label>
             <div class="col-sm-10">
-              <input type="number" class="form-control" name="mins_interval" min="1" max="3600" value="20" required>
-              <small class="help-block">1-3600</small>
+              <input type="number" class="form-control" name="mins_interval" min="1" max="43800" value="20" required>
+              <small class="help-block">1-43800</small>
             </div>
           </div>
           <div class="form-group">

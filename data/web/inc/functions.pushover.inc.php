@@ -1,7 +1,6 @@
 <?php
 function pushover($_action, $_data = null) {
 	global $pdo;
-	global $lang;
   switch ($_action) {
     case 'edit':
       if (!isset($_SESSION['acl']['pushover']) || $_SESSION['acl']['pushover'] != "1" ) {
@@ -36,7 +35,7 @@ function pushover($_action, $_data = null) {
           ));
           $_SESSION['return'][] = array(
             'type' => 'success',
-            'log' => array(__FUNCTION__, $_action, $_data, $_data),
+            'log' => array(__FUNCTION__, $_action, $_data),
             'msg' => 'pushover_settings_edited'
           );
           continue;
@@ -56,7 +55,7 @@ function pushover($_action, $_data = null) {
         else {
           $_SESSION['return'][] = array(
             'type' => 'danger',
-            'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+            'log' => array(__FUNCTION__, $_action, $_data),
             'msg' => 'access_denied'
           );
           continue;
@@ -64,7 +63,7 @@ function pushover($_action, $_data = null) {
         if (!empty($senders_regex) && !is_valid_regex($senders_regex)) {
           $_SESSION['return'][] = array(
             'type' => 'danger',
-            'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+            'log' => array(__FUNCTION__, $_action, $_data),
             'msg' => 'Invalid regex'
           );
           continue;
@@ -120,7 +119,7 @@ function pushover($_action, $_data = null) {
         ));
         $_SESSION['return'][] = array(
           'type' => 'success',
-          'log' => array(__FUNCTION__, $_action, $_data, $_data),
+          'log' => array(__FUNCTION__, $_action, $_data),
           'msg' => 'pushover_settings_edited'
         );
       }

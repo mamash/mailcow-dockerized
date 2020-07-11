@@ -41,7 +41,17 @@ export LC_ALL=C
 DATE=$(date +%Y-%m-%d_%H_%M_%S)
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-function prefetch_images() {
+check_online_status() {
+  CHECK_ONLINE_IPS=(1.1.1.1 9.9.9.9 8.8.8.8)
+  for ip in "${CHECK_ONLINE_IPS[@]}"; do
+    if timeout 3 ping -c 1 ${ip} > /dev/null; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+prefetch_images() {
   [[ -z ${BRANCH} ]] && { echo -e "\e[33m\nUnknown branch...\e[0m"; exit 1; }
   git fetch origin #${BRANCH}
   while read image; do
@@ -140,14 +150,19 @@ while (($#)); do
       echo -e "\e[32mForcing Update...\e[0m"
       FORCE=y
     ;;
+    --no-update-compose)
+      NO_UPDATE_COMPOSE=y
+    ;;
     --help|-h)
     echo './update.sh [-c|--check, --ours, --gc, --skip-start, -h|--help]
 
-  -c|--check   -   Check for updates and exit (exit codes => 0: update available, 3: no updates)
-  --ours       -   Use merge strategy "ours" to solve conflicts in favor of non-mailcow code (local changes)
-  --gc         -   Run garbage collector to delete old image tags
-  --skip-start -   Do not start mailcow after update
-  -f|--force   -   Force update, do not ask questions
+  -c|--check           -   Check for updates and exit (exit codes => 0: update available, 3: no updates)
+  --ours               -   Use merge strategy option "ours" to solve conflicts in favor of non-mailcow code (local changes over remote changes), not recommended!
+  --gc                 -   Run garbage collector to delete old image tags
+  --no-update-compose  -   Do not update docker-compose
+  --prefetch           -   Only prefetch new images and exit (useful to prepare updates)
+  --skip-start         -   Do not start mailcow after update
+  -f|--force           -   Force update, do not ask questions
 '
     exit 1
   esac
@@ -169,6 +184,7 @@ if cp --help 2>&1 | head -n 1 | grep -q -i "busybox"; then echo "BusybBox cp det
 
 CONFIG_ARRAY=(
   "SKIP_LETS_ENCRYPT"
+  "SKIP_SOGO"
   "USE_WATCHDOG"
   "WATCHDOG_NOTIFY_EMAIL"
   "WATCHDOG_NOTIFY_BAN"
@@ -261,6 +277,7 @@ for option in ${CONFIG_ARRAY[@]}; do
     if ! grep -q ${option} mailcow.conf; then
       echo "Adding new option \"${option}\" to mailcow.conf"
       echo '# Must be set for API_KEY to be active' >> mailcow.conf
+      echo '# IPs only, no networks (networks can be set via UI)' >> mailcow.conf
       echo "#API_ALLOW_FROM=" >> mailcow.conf
     fi
   elif [[ ${option} == "SNAT_TO_SOURCE" ]]; then
@@ -316,6 +333,12 @@ for option in ${CONFIG_ARRAY[@]}; do
       echo '# see https://wiki.dovecot.org/SSL/SNIClientSupport' >> mailcow.conf
       echo "ENABLE_SSL_SNI=n" >> mailcow.conf
     fi
+  elif [[ ${option} == "SKIP_SOGO" ]]; then
+    if ! grep -q ${option} mailcow.conf; then
+      echo "Adding new option \"${option}\" to mailcow.conf"
+      echo '# Skip SOGo: Will disable SOGo integration and therefore webmail, DAV protocols and ActiveSync support (experimental, unsupported, not fully implemented) - y/n' >> mailcow.conf
+      echo "SKIP_SOGO=n" >> mailcow.conf
+    fi
   elif [[ ${option} == "MAILDIR_SUB" ]]; then
     if ! grep -q ${option} mailcow.conf; then
       echo "Adding new option \"${option}\" to mailcow.conf"
@@ -355,8 +378,7 @@ for option in ${CONFIG_ARRAY[@]}; do
 done
 
 echo -en "Checking internet connection... "
-timeout 3 ping -c 1 9.9.9.9 > /dev/null
-if [[ $? != 0 ]]; then
+if ! check_online_status; then
   echo -e "\e[31mfailed\e[0m"
   exit 1
 else
@@ -450,25 +472,29 @@ elif [[ ${MERGE_RETURN} != 0 ]]; then
   exit 1
 fi
 
-echo -e "\e[32mFetching new docker-compose version...\e[0m"
-sleep 2
-if [[ ! -z $(which pip) && $(pip list --local 2>&1 | grep -v DEPRECATION | grep -c docker-compose) == 1 ]]; then
-  true
-  #prevent breaking a working docker-compose installed with pip
-elif [[ $(curl -sL -w "%{http_code}" https://www.servercow.de/docker-compose/latest.php -o /dev/null) == "200" ]]; then
-  LATEST_COMPOSE=$(curl -#L https://www.servercow.de/docker-compose/latest.php)
-  COMPOSE_VERSION=$(docker-compose version --short)
-  if [[ "$LATEST_COMPOSE" != "$COMPOSE_VERSION" ]]; then
-    COMPOSE_PATH=$(which docker-compose) 
-    if [[ -w ${COMPOSE_PATH} ]]; then
-      curl -#L https://github.com/docker/compose/releases/download/${LATEST_COMPOSE}/docker-compose-$(uname -s)-$(uname -m) > $COMPOSE_PATH
-      chmod +x $COMPOSE_PATH
-    else
-      echo -e "\e[33mWARNING: $COMPOSE_PATH is not writable, but new version $LATEST_COMPOSE is available (installed: $COMPOSE_VERSION)\e[0m"
-    fi
-  fi
+if [[ ${NO_UPDATE_COMPOSE} == "y" ]]; then
+  echo -e "\e[33mNot fetching latest docker-compose, please check for updates manually!\e[0m"
 else
-  echo -e "\e[33mCannot determine latest docker-compose version, skipping...\e[0m"
+  echo -e "\e[32mFetching new docker-compose version...\e[0m"
+  sleep 1
+  if [[ ! -z $(which pip) && $(pip list --local 2>&1 | grep -v DEPRECATION | grep -c docker-compose) == 1 ]]; then
+    true
+    #prevent breaking a working docker-compose installed with pip
+  elif [[ $(curl -sL -w "%{http_code}" https://www.servercow.de/docker-compose/latest.php -o /dev/null) == "200" ]]; then
+    LATEST_COMPOSE=$(curl -#L https://www.servercow.de/docker-compose/latest.php)
+    COMPOSE_VERSION=$(docker-compose version --short)
+    if [[ "$LATEST_COMPOSE" != "$COMPOSE_VERSION" ]]; then
+      COMPOSE_PATH=$(which docker-compose)
+      if [[ -w ${COMPOSE_PATH} ]]; then
+        curl -#L https://github.com/docker/compose/releases/download/${LATEST_COMPOSE}/docker-compose-$(uname -s)-$(uname -m) > $COMPOSE_PATH
+        chmod +x $COMPOSE_PATH
+      else
+        echo -e "\e[33mWARNING: $COMPOSE_PATH is not writable, but new version $LATEST_COMPOSE is available (installed: $COMPOSE_VERSION)\e[0m"
+      fi
+    fi
+  else
+    echo -e "\e[33mCannot determine latest docker-compose version, skipping...\e[0m"
+  fi
 fi
 
 echo -e "\e[32mFetching new images, if any...\e[0m"
