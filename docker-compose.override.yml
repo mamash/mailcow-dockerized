@@ -1,5 +1,7 @@
 version: '2.1'
 services:
+  dovecot-mailcow:
+    build: ./data/Dockerfiles/dovecot
   php-fpm-mailcow:
     build: ./data/Dockerfiles/phpfpm
   mailman:
