@@ -25,6 +25,37 @@ services:
       mailcow-network:
         aliases:
           - mailman
+  logz:
+    image: "logzio/docker-collector-logs:latest"
+    container_name: logz
+    environment:
+      - "LOGZIO_TOKEN=${LOGZIO_TOKEN}"
+      - "LOGZIO_REGION=eu"
+      - "HOSTNAME=perry"
+      - "skipContainerName=backup,dockerapi,olefy,logz,metrics,nginx,redis,sogo,solr,watchdog"
+      - "excludeLines=CRON,forwardinghosts,wp-login"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    networks:
+      mailcow-network:
+        aliases:
+          - logz
+  metrics:
+    image: "logzio/docker-collector-metrics:latest"
+    container_name: metrics
+    environment:
+      - "LOGZIO_TOKEN=${LOGZIO_METRICS_TOKEN}"
+      - "LOGZIO_REGION=eu"
+      - "LOGZIO_MODULES=system,docker"
+      - "HOSTNAME=perry"
+      - "DOCKER_SKIP_CONTAINER_NAME=backup,dockerapi,olefy,logz,metrics,sogo,watchdog"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      mailcow-network:
+        aliases:
+          - metrics
 volumes:
   mailman-lib:
   mailman-postfix:
