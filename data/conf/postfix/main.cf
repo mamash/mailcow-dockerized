@@ -7,7 +7,6 @@ smtpd_tls_cert_file = /etc/ssl/mail/cert.pem
 smtpd_tls_key_file = /etc/ssl/mail/key.pem
 tls_server_sni_maps = hash:/opt/postfix/conf/sni.map
 smtpd_tls_received_header = yes
-smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 smtpd_relay_restrictions = permit_mynetworks,
   permit_sasl_authenticated,
@@ -16,7 +15,7 @@ smtpd_relay_restrictions = permit_mynetworks,
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 relayhost =
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 [fe80::]/10 [fc00::]/7
+mynetworks_style = subnet
 mailbox_size_limit = 0
 recipient_delimiter = +
 inet_interfaces = all
@@ -195,7 +194,7 @@ smtpd_last_auth = check_policy_service inet:127.0.0.1:10028
 # Define protocols for SMTPS and submission service
 submission_smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 smtps_smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+parent_domain_matches_subdomains = debug_peer_list,fast_flush_domains,mynetworks,qmqpd_authorized_clients
 
 # DO NOT EDIT ANYTHING BELOW #
 # User overrides #
-

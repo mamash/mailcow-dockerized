@@ -116,7 +116,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             <?=$lang['mailbox']['sogo_allow_admin_hint'];?>
             </div>
             <?php } ?>
-            <!-- <div class="mass-actions-mailbox" data-actions-header="true"></div> -->
+            <div class="mass-actions-mailbox" data-actions-header="true"></div>
             <div class="table-responsive">
               <table id="mailbox_table" class="table table-striped"></table>
             </div>
@@ -144,6 +144,10 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
                   <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_notification' data-api-attr='{"quarantine_notification":"weekly"}' href="#"><?=$lang['user']['weekly'];?></a></li>
                   <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_notification' data-api-attr='{"quarantine_notification":"never"}' href="#"><?=$lang['user']['never'];?></a></li>
                   <li role="separator" class="divider"></li>
+                  <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_category' data-api-attr='{"quarantine_category":"reject"}' href="#"><?=$lang['user']['q_reject'];?></a></li>
+                  <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_category' data-api-attr='{"quarantine_category":"add_header"}' href="#"><?=$lang['user']['q_add_header'];?></a></li>
+                  <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_category' data-api-attr='{"quarantine_category":"all"}' href="#"><?=$lang['user']['q_all'];?></a></li>
+                  <li role="separator" class="divider"></li>
                   <li class="dropdown-header"><?=$lang['mailbox']['allowed_protocols'];?></li>
                   <li class="dropdown-header">IMAP</li>
                   <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/mailbox' data-api-attr='{"imap_access":1}' href="#"><?=$lang['mailbox']['activate'];?></a></li>
@@ -165,6 +169,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
                   <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#"><?=$lang['mailbox']['mailbox'];?> <span class="caret"></span></a>
                   <ul class="dropdown-menu">
                     <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/mailbox' data-api-attr='{"active":"1"}' href="#"><?=$lang['mailbox']['activate'];?></a></li>
+                    <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/mailbox' data-api-attr='{"active":"2"}' href="#"><?=$lang['mailbox']['disable_login'];?></a></li>
                     <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/mailbox' data-api-attr='{"active":"0"}' href="#"><?=$lang['mailbox']['deactivate'];?></a></li>
                     <li role="separator" class="divider"></li>
                     <li><a data-action="delete_selected" data-id="mailbox" data-api-url='delete/mailbox' href="#"><?=$lang['mailbox']['remove'];?></a></li>
@@ -205,6 +210,10 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
                     <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_notification' data-api-attr='{"quarantine_notification":"daily"}' href="#"><?=$lang['user']['daily'];?></a></li>
                     <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_notification' data-api-attr='{"quarantine_notification":"weekly"}' href="#"><?=$lang['user']['weekly'];?></a></li>
                     <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_notification' data-api-attr='{"quarantine_notification":"never"}' href="#"><?=$lang['user']['never'];?></a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_category' data-api-attr='{"quarantine_category":"reject"}' href="#"><?=$lang['user']['q_reject'];?></a></li>
+                    <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_category' data-api-attr='{"quarantine_category":"add_header"}' href="#"><?=$lang['user']['q_add_header'];?></a></li>
+                    <li><a data-action="edit_selected" data-id="mailbox" data-api-url='edit/quarantine_category' data-api-attr='{"quarantine_category":"all"}' href="#"><?=$lang['user']['q_all'];?></a></li>
                   </ul>
                 </div>
                 <a class="btn btn-sm btn-success" href="#" data-toggle="modal" data-target="#addMailboxModal"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_mailbox'];?></a>
@@ -263,7 +272,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             <div class="panel-heading">
               <?=$lang['mailbox']['domain_aliases'];?> <span class="badge badge-info table-lines"></span>
               <div class="btn-group pull-right hidden-xs">
-                <button class="btn btn-xs btn-success" href="#" data-toggle="modal" data-target="#addAliasDomainModal"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_domain_alias'];?></button>
+                <button class="btn btn-xs btn-success" href="#" data-acl="<?=$_SESSION['acl']['alias_domains'];?>" data-toggle="modal" data-target="#addAliasDomainModal"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_domain_alias'];?></button>
                 <button class="btn btn-xs btn-default refresh_table" data-draw="draw_aliasdomain_table" data-table="aliasdomain_table"><?=$lang['admin']['refresh'];?></button>
                 <button type="button" class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown"><?=$lang['mailbox']['table_size'];?> 
                   <span class="caret"></span>
@@ -319,7 +328,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
               </div>
             </div>
             <div class="panel-body help-block">
-            <?=$lang['mailbox']['alias_domain_alias_hint'];?>
+              <?=$lang['mailbox']['alias_domain_alias_hint'];?>
             </div>
             <!-- <div class="mass-actions-mailbox" data-actions-header="true"></div> -->
             <div class="table-responsive">
@@ -340,6 +349,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
                   <li><a data-action="edit_selected" data-id="alias" data-api-url='edit/alias' data-api-attr='{"sogo_visible":"0"}' href="#"><?=$lang['mailbox']['sogo_visible_n'];?></a></li>
                   <?php } ?>
                 </ul>
+                <a class="btn btn-sm btn-default" data-action="edit_selected" data-id="alias" data-api-url='edit/alias' data-api-attr='{"expand_alias":true}' ><span class="glyphicon glyphicon-resize-full"></span> <?=$lang['mailbox']['add_alias_expand'];?></a>
                 <a class="btn btn-sm btn-success" href="#" data-toggle="modal" data-target="#addAliasModal"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_alias'];?></a>
               </div>
             </div>
@@ -351,7 +361,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             <div class="panel-heading">
               <?=$lang['mailbox']['sync_jobs'];?> <span class="badge badge-info table-lines"></span>
               <div class="btn-group pull-right hidden-xs">
-                <button class="btn btn-xs btn-success" href="#" data-toggle="modal" data-target="#addSyncJobModalAdmin"><span class="glyphicon glyphicon-plus"></span> <?=$lang['user']['create_syncjob'];?></button>
+                <button data-acl="<?=$_SESSION['acl']['syncjobs'];?>" class="btn btn-xs btn-success" href="#" data-toggle="modal" data-target="#addSyncJobModalAdmin"><span class="glyphicon glyphicon-plus"></span> <?=$lang['user']['create_syncjob'];?></button>
                 <button class="btn btn-xs btn-default refresh_table" data-draw="draw_sync_job_table" data-table="sync_job_table"><?=$lang['admin']['refresh'];?></button>
                 <button type="button" class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown"><?=$lang['mailbox']['table_size'];?> 
                   <span class="caret"></span>
@@ -393,7 +403,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             <div class="panel-heading">
               <?=$lang['mailbox']['filters'];?> <span class="badge badge-info table-lines"></span>
               <div class="btn-group pull-right hidden-xs">
-                <button class="btn btn-xs btn-success" href="#" data-toggle="modal" data-target="#addFilterModalAdmin"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_filter'];?></button>
+                <button class="btn btn-xs btn-success" href="#" data-acl="<?=$_SESSION['acl']['filters'];?>" data-toggle="modal" data-target="#addFilterModalAdmin"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_filter'];?></button>
                 <button class="btn btn-xs btn-default refresh_table" data-draw="draw_filter_table" data-table="filter_table"><?=$lang['admin']['refresh'];?></button>
                 <button type="button" class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown"><?=$lang['mailbox']['table_size'];?> 
                   <span class="caret"></span>
@@ -482,7 +492,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             <div class="panel-heading">
               <?=$lang['mailbox']['bcc_maps'];?> <span class="badge badge-info table-lines"></span>
               <div class="btn-group pull-right hidden-xs">
-                <button class="btn btn-xs btn-success" href="#" data-toggle="modal" data-target="#addBCCModalAdmin"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_bcc_entry'];?></button>
+                <button class="btn btn-xs btn-success" href="#" data-acl="<?=$_SESSION['acl']['bcc_maps'];?>" data-toggle="modal" data-target="#addBCCModalAdmin"><span class="glyphicon glyphicon-plus"></span> <?=$lang['mailbox']['add_bcc_entry'];?></button>
                 <button class="btn btn-xs btn-default refresh_table" data-draw="draw_bcc_table" data-table="bcc_table"><?=$lang['admin']['refresh'];?></button>
                 <button type="button" class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown"><?=$lang['mailbox']['table_size'];?> 
                   <span class="caret"></span>

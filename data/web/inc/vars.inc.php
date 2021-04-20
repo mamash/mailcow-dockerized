@@ -79,7 +79,9 @@ $DETECT_LANGUAGE = true;
 $DEFAULT_LANG = 'en';
 
 // Available languages
-$AVAILABLE_LANGUAGES = array('ca', 'cs', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sv', 'zh');
+// Use (ISO 639-1) Code standard 
+// See https://www.loc.gov/standards/iso639-2/php/code_list.php
+$AVAILABLE_LANGUAGES = array('ca', 'cs', 'da', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'ko', 'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sv', 'zh');
 
 // Change theme (default: lumen)
 // Needs to be one of those: cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper, readable, sandstone,
@@ -87,14 +89,6 @@ $AVAILABLE_LANGUAGES = array('ca', 'cs', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it
 // See https://bootswatch.com/
 // WARNING: Only lumen is loaded locally. Enabling any other theme, will download external sources.
 $DEFAULT_THEME = 'lumen';
-
-// Password complexity as regular expression
-// Min. 6 characters
-$PASSWD_REGEP = '.{6,}';
-// Min. 6 characters, which must include at least one uppercase letter, one lowercase letter and one number
-// $PASSWD_REGEP = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[a-z]).{6,}$';
-// Min. 6 characters, which must include at least one letter and one number
-// $PASSWD_REGEP = '^(?=.*[0-9])(?=.*[A-Za-z]).{6,}$';
 
 // Show DKIM private keys - false by default
 $SHOW_DKIM_PRIV_KEYS = false;
@@ -121,9 +115,6 @@ $SESSION_LIFETIME = 10800;
 
 // Label for OTP devices
 $OTP_LABEL = "mailcow UI";
-
-// Default "to" address in relay test tool
-$RELAY_TO = "null@hosted.mailcow.de";
 
 // How long to wait (in s) for cURL Docker requests
 $DOCKER_TIMEOUT = 60;
@@ -166,6 +157,18 @@ $MAILBOX_DEFAULT_ATTRIBUTES['pop3_access'] = true;
 
 // Mailbox has SMTP access by default
 $MAILBOX_DEFAULT_ATTRIBUTES['smtp_access'] = true;
+
+// Mailbox has XMPP access by default (if domain has XMPP enabled)
+$MAILBOX_DEFAULT_ATTRIBUTES['xmpp_access'] = true;
+
+// Mailbox is XMPP admin by default (bad)
+$MAILBOX_DEFAULT_ATTRIBUTES['xmpp_admin'] = false;
+
+// Mailbox receives notifications about...
+// "add_header" - mail that was put into the Junk folder
+// "reject" - mail that was rejected
+// "all" - mail that was rejected and put into the Junk folder
+$MAILBOX_DEFAULT_ATTRIBUTES['quarantine_category'] = 'reject';
 
 // Default mailbox format, should not be changed unless you know exactly, what you do, keep the trailing ":"
 // Check dovecot.conf for further changes (e.g. shared namespace)

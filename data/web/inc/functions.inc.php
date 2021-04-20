@@ -88,21 +88,157 @@ function hash_password($password) {
   // in case default pass scheme is not defined, falling back to BLF-CRYPT.
   global $default_pass_scheme;
   $pw_hash = NULL;
-  switch (strtoupper($default_pass_scheme)) {
-    case "SSHA256":
-      $salt_str = bin2hex(openssl_random_pseudo_bytes(8));
-      $pw_hash = "{SSHA256}".base64_encode(hash('sha256', $password . $salt_str, true) . $salt_str);
-      break;
-    case "SSHA512":
-      $salt_str = bin2hex(openssl_random_pseudo_bytes(8));
-      $pw_hash = "{SSHA512}".base64_encode(hash('sha512', $password . $salt_str, true) . $salt_str);
-      break;
-    case "BLF-CRYPT":
-    default:
-      $pw_hash = "{BLF-CRYPT}" . password_hash($password, PASSWORD_BCRYPT);
-      break;
+  // support pre-hashed passwords
+  if (preg_match('/^{(ARGON2I|ARGON2ID|BLF-CRYPT|CLEAR|CLEARTEXT|CRYPT|DES-CRYPT|LDAP-MD5|MD5|MD5-CRYPT|PBKDF2|PLAIN|PLAIN-MD4|PLAIN-MD5|PLAIN-TRUNC|PLAIN-TRUNC|SHA|SHA1|SHA256|SHA256-CRYPT|SHA512|SHA512-CRYPT|SMD5|SSHA|SSHA256|SSHA512)}/i', $password)) {
+    $pw_hash = $password;
+  }
+  else {
+    switch (strtoupper($default_pass_scheme)) {
+      case "SSHA":
+        $salt_str = bin2hex(openssl_random_pseudo_bytes(8));
+        $pw_hash = "{SSHA}".base64_encode(hash('sha1', $password . $salt_str, true) . $salt_str);
+        break;
+      case "SSHA256":
+        $salt_str = bin2hex(openssl_random_pseudo_bytes(8));
+        $pw_hash = "{SSHA256}".base64_encode(hash('sha256', $password . $salt_str, true) . $salt_str);
+        break;
+      case "SSHA512":
+        $salt_str = bin2hex(openssl_random_pseudo_bytes(8));
+        $pw_hash = "{SSHA512}".base64_encode(hash('sha512', $password . $salt_str, true) . $salt_str);
+        break;
+      case "BLF-CRYPT":
+      default:
+        $pw_hash = "{BLF-CRYPT}" . password_hash($password, PASSWORD_BCRYPT);
+        break;
+    }
   }
   return $pw_hash;
+}
+function password_complexity($_action, $_data = null) {
+	global $redis;
+	global $lang;
+  switch ($_action) {
+    case 'edit':
+      if ($_SESSION['mailcow_cc_role'] != "admin") {
+        $_SESSION['return'][] = array(
+          'type' => 'danger',
+          'log' => array(__FUNCTION__, $_action, $_data),
+          'msg' => 'access_denied'
+        );
+        return false;
+      }
+      $is_now = password_complexity('get');
+      if (!empty($is_now)) {
+        $length = (isset($_data['length']) && intval($_data['length']) >= 3) ? intval($_data['length']) : $is_now['length'];
+        $chars = (isset($_data['chars'])) ? intval($_data['chars']) : $is_now['chars'];
+        $lowerupper = (isset($_data['lowerupper'])) ? intval($_data['lowerupper']) : $is_now['lowerupper'];
+        $special_chars = (isset($_data['special_chars'])) ? intval($_data['special_chars']) : $is_now['special_chars'];
+        $numbers = (isset($_data['numbers'])) ? intval($_data['numbers']) : $is_now['numbers'];
+      }
+      try {
+        $redis->hMSet('PASSWD_POLICY', [
+          'length' => $length,
+          'chars' => $chars,
+          'special_chars' => $special_chars,
+          'lowerupper' => $lowerupper,
+          'numbers' => $numbers
+        ]);
+      }
+      catch (RedisException $e) {
+        $_SESSION['return'][] = array(
+          'type' => 'danger',
+          'log' => array(__FUNCTION__, $_action, $_data),
+          'msg' => array('redis_error', $e)
+        );
+        return false;
+      }
+      $_SESSION['return'][] = array(
+        'type' => 'success',
+        'log' => array(__FUNCTION__, $_action, $_data),
+        'msg' => 'password_policy_saved'
+      );
+    break;
+    case 'get':
+      try {
+        $length = $redis->hGet('PASSWD_POLICY', 'length');
+        $chars = $redis->hGet('PASSWD_POLICY', 'chars');
+        $special_chars = $redis->hGet('PASSWD_POLICY', 'special_chars');
+        $lowerupper = $redis->hGet('PASSWD_POLICY', 'lowerupper');
+        $numbers = $redis->hGet('PASSWD_POLICY', 'numbers');
+        return array(
+          'length' => $length,
+          'chars' => $chars,
+          'special_chars' => $special_chars,
+          'lowerupper' => $lowerupper,
+          'numbers' => $numbers
+        );
+      }
+      catch (RedisException $e) {
+        $_SESSION['return'][] = array(
+          'type' => 'danger',
+          'log' => array(__FUNCTION__, $_action, $_data),
+          'msg' => array('redis_error', $e)
+        );
+        return false;
+      }
+      return false;
+    break;
+    case 'html':
+      $policies = password_complexity('get');
+      foreach ($policies as $name => $value) {
+        if ($value != 0) {
+          $policy_text[] = sprintf($lang['admin']["password_policy_$name"], $value);
+        }
+      }
+      return '<p class="help-block small">- ' . implode('<br>- ', $policy_text) . '</p>';
+    break;
+  }
+}
+function password_check($password1, $password2) {
+  $password_complexity = password_complexity('get');
+
+  if (empty($password1) || empty($password2)) {
+    $_SESSION['return'][] = array(
+      'type' => 'danger',
+      'log' => array(__FUNCTION__, $_action, $_type),
+      'msg' => 'password_complexity'
+    );
+    return false;
+  }
+
+  if ($password1 != $password2) {
+    $_SESSION['return'][] = array(
+      'type' => 'danger',
+      'log' => array(__FUNCTION__, $_action, $_type),
+      'msg' => 'password_mismatch'
+    );
+    return false;
+  }
+
+  $given_password['length'] = strlen($password1);
+  $given_password['special_chars'] = preg_match('/[^a-zA-Z\d]/', $password1);
+  $given_password['chars'] = preg_match('/[a-zA-Z]/',$password1);
+  $given_password['numbers'] = preg_match('/\d/', $password1);
+  $lower = strlen(preg_replace("/[^a-z]/", '', $password1));
+  $upper = strlen(preg_replace("/[^A-Z]/", '', $password1));
+  $given_password['lowerupper'] = ($lower > 0 && $upper > 0) ? true : false;
+
+  if (
+    ($given_password['length'] < $password_complexity['length']) ||
+    ($password_complexity['special_chars'] == 1 && (intval($given_password['special_chars']) != $password_complexity['special_chars'])) ||
+    ($password_complexity['chars'] == 1 && (intval($given_password['chars']) != $password_complexity['chars'])) ||
+    ($password_complexity['numbers'] == 1 && (intval($given_password['numbers']) != $password_complexity['numbers'])) ||
+    ($password_complexity['lowerupper'] == 1 && (intval($given_password['lowerupper']) != $password_complexity['lowerupper']))
+  ) {
+    $_SESSION['return'][] = array(
+      'type' => 'danger',
+      'log' => array(__FUNCTION__, $_action, $_type),
+      'msg' => 'password_complexity'
+    );
+    return false;
+  }
+
+  return true;
 }
 function last_login($user) {
   global $pdo;
@@ -143,6 +279,7 @@ function sys_mail($_data) {
   $mailboxes = array();
   $mass_from = $_data['mass_from'];
   $mass_text = $_data['mass_text'];
+  $mass_html = $_data['mass_html'];
   $mass_subject = $_data['mass_subject'];
   if (!filter_var($mass_from, FILTER_VALIDATE_EMAIL)) {
 		$_SESSION['return'][] =  array(
@@ -202,7 +339,13 @@ function sys_mail($_data) {
     $mail->setFrom($mass_from);
     $mail->Subject = $mass_subject;
     $mail->CharSet ="UTF-8";
-    $mail->Body = $mass_text;
+    if (!empty($mass_html)) {
+      $mail->Body = $mass_html;
+      $mail->AltBody = $mass_text;
+    }
+    else {
+      $mail->Body = $mass_text;
+    }
     $mail->XMailer = 'MooMassMail';
     foreach ($rcpts as $rcpt) {
       $mail->AddAddress($rcpt);
@@ -332,6 +475,9 @@ function hasDomainAccess($username, $role, $domain) {
 }
 function hasMailboxObjectAccess($username, $role, $object) {
 	global $pdo;
+	if (empty($username) || empty($role) || empty($object)) {
+		return false;
+	}
 	if (!filter_var(html_entity_decode(rawurldecode($username)), FILTER_VALIDATE_EMAIL) && !ctype_alnum(str_replace(array('_', '.', '-'), '', $username))) {
 		return false;
 	}
@@ -439,7 +585,7 @@ function generate_tlsa_digest($hostname, $port, $starttls = null) {
     return 'Error: Cannot read peer certificate';
   }
 }
-function alertbox_log_parser($_data){
+function alertbox_log_parser($_data) {
   global $lang;
   if (isset($_data['return'])) {
     foreach ($_data['return'] as $return) {
@@ -469,61 +615,91 @@ function alertbox_log_parser($_data){
   }
   return false;
 }
+function verify_salted_hash($hash, $password, $algo, $salt_length) {
+  // Decode hash
+  $dhash = base64_decode($hash);
+  // Get first n bytes of binary which equals a SSHA hash
+  $ohash = substr($dhash, 0, $salt_length);
+  // Remove SSHA hash from decoded hash to get original salt string
+  $osalt = str_replace($ohash, '', $dhash);
+  // Check single salted SSHA hash against extracted hash
+  if (hash_equals(hash($algo, $password . $osalt, true), $ohash)) {
+    return true;
+  }
+  return false;
+}
 function verify_hash($hash, $password) {
-  if (preg_match('/^{SSHA256}/i', $hash)) {
-    // Remove tag if any
-    $hash = preg_replace('/^{SSHA256}/i', '', $hash);
-    // Decode hash
-    $dhash = base64_decode($hash);
-    // Get first 32 bytes of binary which equals a SHA256 hash
-    $ohash = substr($dhash, 0, 32);
-    // Remove SHA256 hash from decoded hash to get original salt string
-    $osalt = str_replace($ohash, '', $dhash);
-    // Check single salted SHA256 hash against extracted hash
-    if (hash_equals(hash('sha256', $password . $osalt, true), $ohash)) {
-      return true;
-    }
-  }
-  elseif (preg_match('/^{PLAIN-MD5}/i', $hash)) {
-    $hash = preg_replace('/^{PLAIN-MD5}/i', '', $hash);
-    if (md5($password) == $hash) {
-      return true;
-    }
-  }
-  elseif (preg_match('/^{SHA512-CRYPT}/i', $hash)) {
-    // Remove tag if any
-    $hash = preg_replace('/^{SHA512-CRYPT}/i', '', $hash);
-    // Decode hash
-    preg_match('/\\$6\\$(.*)\\$(.*)/i', $hash, $hash_array);
-    $osalt = $hash_array[1];
-    $ohash = $hash_array[2];
-    if (hash_equals(crypt($password, '$6$' . $osalt . '$'), $hash)) {
-      return true;
-    }
-  }
-  elseif (preg_match('/^{SSHA512}/i', $hash)) {
-    $hash = preg_replace('/^{SSHA512}/i', '', $hash);
-    // Decode hash
-    $dhash = base64_decode($hash);
-    // Get first 64 bytes of binary which equals a SHA512 hash
-    $ohash = substr($dhash, 0, 64);
-    // Remove SHA512 hash from decoded hash to get original salt string
-    $osalt = str_replace($ohash, '', $dhash);
-    // Check single salted SHA512 hash against extracted hash
-    if (hash_equals(hash('sha512', $password . $osalt, true), $ohash)) {
-      return true;
-    }
-  }
-  elseif (preg_match('/^{MD5-CRYPT}/i', $hash)) {
-    $hash = preg_replace('/^{MD5-CRYPT}/i', '', $hash);
-    if (password_verify($password, $hash)) {
-      return true;
-    }
-  } 
-  elseif (preg_match('/^{BLF-CRYPT}/i', $hash)) {
-    $hash = preg_replace('/^{BLF-CRYPT}/i', '', $hash);
-    if (password_verify($password, $hash)) {
-      return true;
+  if (preg_match('/^{(.+)}(.+)/i', $hash, $hash_array)) {
+    $scheme = strtoupper($hash_array[1]);
+    $hash = $hash_array[2];
+    switch ($scheme) {
+      case "ARGON2I":
+      case "ARGON2ID":
+      case "BLF-CRYPT":
+      case "CRYPT":
+      case "DES-CRYPT":
+      case "MD5-CRYPT":
+      case "MD5":
+      case "SHA256-CRYPT":
+      case "SHA512-CRYPT":
+        return password_verify($password, $hash);
+
+      case "CLEAR":
+      case "CLEARTEXT":
+      case "PLAIN":
+        return $password == $hash;
+
+      case "LDAP-MD5":
+        $hash = base64_decode($hash);
+        return hash_equals(hash('md5', $password, true), $hash);
+
+      case "PBKDF2":
+        $components = explode('$', $hash);
+        $salt = $components[2];
+        $rounds = $components[3];
+        $hash = $components[4];
+        return hash_equals(hash_pbkdf2('sha1', $password, $salt, $rounds), $hash);
+
+      case "PLAIN-MD4":
+        return hash_equals(hash('md4', $password), $hash);
+
+      case "PLAIN-MD5":
+        return md5($password) == $hash;
+
+      case "PLAIN-TRUNC":
+        $components = explode('-', $hash);
+        if (count($components) > 1) {
+          $trunc_len = $components[0];
+          $trunc_password = $components[1];
+
+          return substr($password, 0, $trunc_len) == $trunc_password;
+        } else {
+          return $password == $hash;
+        }
+
+      case "SHA":
+      case "SHA1":
+      case "SHA256":
+      case "SHA512":
+        // SHA is an alias for SHA1
+        $scheme = $scheme == "SHA" ? "sha1" : strtolower($scheme);
+        $hash = base64_decode($hash);
+        return hash_equals(hash($scheme, $password, true), $hash);
+
+      case "SMD5":
+        return verify_salted_hash($hash, $password, 'md5', 16);
+
+      case "SSHA":
+        return verify_salted_hash($hash, $password, 'sha1', 20);
+
+      case "SSHA256":
+        return verify_salted_hash($hash, $password, 'sha256', 32);
+
+      case "SSHA512":
+        return verify_salted_hash($hash, $password, 'sha512', 64);
+
+      default:
+        return false;
     }
   }
   return false;

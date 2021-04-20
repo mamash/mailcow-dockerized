@@ -136,7 +136,7 @@ if (isset($_GET['query'])) {
         ));
         exit();
       }
-      
+
       switch ($category) {
         // fido2-registration via POST
         case "fido2-registration":
@@ -306,7 +306,9 @@ if (isset($_GET['query'])) {
             $_SESSION["mailcow_cc_role"] = "domainadmin";
           }
           $_SESSION["mailcow_cc_username"] = $process_fido2['username'];
+          $_SESSION['mailcow_cc_last_login'] = last_login($process_fido2['username']);
           $_SESSION["fido2_cid"] = $process_fido2['cid'];
+          unset($_SESSION["challenge"]);
           $_SESSION['return'][] =  array(
             'type' => 'success',
             'log' => array("fido2_login"),
@@ -440,6 +442,20 @@ if (isset($_GET['query'])) {
               default:
                 $data = mailbox('get', 'domain_details', $object);
                 process_get_return($data);
+              break;
+            }
+          break;
+
+          case "passwordpolicy":
+            switch ($object) {
+              case "html":
+                $password_complexity_rules = password_complexity('html');
+                if ($password_complexity_rules !== false) {
+                  process_get_return($password_complexity_rules);
+                }
+                else {
+                  echo '{}';
+                }
               break;
             }
           break;
@@ -839,18 +855,19 @@ if (isset($_GET['query'])) {
           case "mailbox":
             switch ($object) {
               case "all":
+              case "reduced":
                 if (empty($extra)) {
                   $domains = mailbox('get', 'domains');
                 }
                 else {
-                  $domains = array($extra);
+                  $domains = explode(',', $extra);
                 }
                 if (!empty($domains)) {
                   foreach ($domains as $domain) {
                     $mailboxes = mailbox('get', 'mailboxes', $domain);
                     if (!empty($mailboxes)) {
                       foreach ($mailboxes as $mailbox) {
-                        if ($details = mailbox('get', 'mailbox_details', $mailbox)) {
+                        if ($details = mailbox('get', 'mailbox_details', $mailbox, $object)) {
                           $data[] = $details;
                         }
                         else {
@@ -1187,7 +1204,7 @@ if (isset($_GET['query'])) {
                   $domains = array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains'));
                 }
                 else {
-                  $domains = array($extra);
+                  $domains = explode(',', $extra);
                 }
                 if (!empty($domains)) {
                   foreach ($domains as $domain) {
@@ -1550,13 +1567,16 @@ if (isset($_GET['query'])) {
           process_edit_return(mailbox('edit', 'alias', array_merge(array('id' => $items), $attr)));
         break;
         case "rspamd-map":
-          process_edit_return(rspamd('edit', array_merge(array('map' => $items), $attr)));
+          process_edit_return(rspamd_maps('edit', array_merge(array('map' => $items), $attr)));
         break;
         case "fido2-fn":
           process_edit_return(fido2(array('action' => 'edit_fn', 'fido2_attrs' => $attr)));
         break;
         case "app_links":
           process_edit_return(customize('edit', 'app_links', $attr));
+        break;
+        case "passwordpolicy":
+          process_edit_return(password_complexity('edit', $attr));
         break;
         case "relayhost":
           process_edit_return(relayhost('edit', array_merge(array('id' => $items), $attr)));
@@ -1575,6 +1595,9 @@ if (isset($_GET['query'])) {
         break;
         case "quarantine_notification":
           process_edit_return(mailbox('edit', 'quarantine_notification', array_merge(array('username' => $items), $attr)));
+        break;
+        case "quarantine_category":
+          process_edit_return(mailbox('edit', 'quarantine_category', array_merge(array('username' => $items), $attr)));
         break;
         case "qitem":
           process_edit_return(quarantine('edit', array_merge(array('id' => $items), $attr)));
