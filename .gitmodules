@@ -1,0 +1,3 @@
+[submodule "data/web/dmarc"]
+	path = data/web/dmarc
+	url = https://github.com/techsneeze/dmarcts-report-viewer.git

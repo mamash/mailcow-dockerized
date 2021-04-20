@@ -56,6 +56,29 @@ services:
       mailcow-network:
         aliases:
           - metrics
+  dmarc:
+    build: ./data/Dockerfiles/dmarc
+    #image: "gutmensch/dmarc-report:latest"
+    hostname: dmarc
+    depends_on:
+      - mysql-mailcow
+    environment:
+      - "REPORT_DB_HOST=mysql-mailcow"
+      - "REPORT_DB_NAME=dmarc"
+      - "REPORT_DB_USER=${DBUSER}"
+      - "REPORT_DB_PASS=${DBPASS}"
+      - "REPORT_DB_PORT=3306"
+      - "PARSER_IMAP_SERVER=dovecot-mailcow"
+      - "PARSER_IMAP_PORT=143"
+      - "PARSER_IMAP_USER=dmarc@ptakopy.sk"
+      - "PARSER_IMAP_PASS=eadishea53"
+      - "PARSER_IMAP_READ_FOLDER=INBOX"
+      - "PARSER_IMAP_MOVE_FOLDER=Processed"
+      - "PARSER_IMAP_MOVE_FOLDER_ERR=Error"
+    networks:
+      mailcow-network:
+        aliases:
+          - dmarc
 volumes:
   mailman-lib:
   mailman-postfix:
