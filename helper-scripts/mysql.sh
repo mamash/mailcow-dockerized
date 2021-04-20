@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
 
 Usage:
 
-  $0 <createdb|mysql|import> [dbname]
+  $0 <createdb|mysql|import|dump> [dbname]
 
 EOF
   exit 1
@@ -22,6 +22,9 @@ case ${cmd} in
       docker-compose exec mysql-mailcow mysql -p${DBROOT} -e "create database ${db} character set utf8 collate utf8_general_ci"
       docker-compose exec mysql-mailcow mysql -p${DBROOT} -e "grant all privileges on ${db}.* to ${DBUSER}@'%' identified by '${pass}'"
       docker-compose exec mysql-mailcow mysql -p${DBROOT} -e "flush privileges")
+    ;;
+  dump)
+    docker-compose exec -T mysql-mailcow mysqldump -u${DBUSER} -p${DBPASS} ${db}
     ;;
   mysql)
     docker-compose exec mysql-mailcow mysql -u${DBUSER} -p${DBPASS} ${DBNAME}
