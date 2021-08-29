@@ -4,7 +4,6 @@ namespace LdapRecord;
 
 use Carbon\Carbon;
 use Closure;
-use Exception;
 use LdapRecord\Auth\Guard;
 use LdapRecord\Configuration\DomainConfiguration;
 use LdapRecord\Events\DispatcherInterface;
@@ -75,7 +74,7 @@ class Connection
     /**
      * The authentication guard resolver.
      *
-     * @var \Closure
+     * @var Closure
      */
     protected $authGuardResolver;
 
@@ -112,9 +111,9 @@ class Connection
      *
      * @param array $config
      *
-     * @return $this
-     *
      * @throws Configuration\ConfigurationException
+     *
+     * @return $this
      */
     public function setConfiguration($config = [])
     {
@@ -137,8 +136,6 @@ class Connection
     public function setLdapConnection(LdapInterface $ldap)
     {
         $this->ldap = $ldap;
-
-        $this->initialize();
 
         return $this;
     }
@@ -186,8 +183,8 @@ class Connection
             $this->configuration->get('options'),
             [
                 LDAP_OPT_PROTOCOL_VERSION => $this->configuration->get('version'),
-                LDAP_OPT_NETWORK_TIMEOUT  => $this->configuration->get('timeout'),
-                LDAP_OPT_REFERRALS        => $this->configuration->get('follow_referrals'),
+                LDAP_OPT_NETWORK_TIMEOUT => $this->configuration->get('timeout'),
+                LDAP_OPT_REFERRALS => $this->configuration->get('follow_referrals'),
             ]
         ));
     }
@@ -244,10 +241,10 @@ class Connection
      * @param string|null $username
      * @param string|null $password
      *
-     * @return Connection
-     *
      * @throws Auth\BindException
      * @throws LdapRecordException
+     *
+     * @return Connection
      */
     public function connect($username = null, $password = null)
     {
@@ -277,10 +274,10 @@ class Connection
     /**
      * Reconnect to the LDAP server.
      *
-     * @return void
-     *
      * @throws Auth\BindException
      * @throws ConnectionException
+     *
+     * @return void
      */
     public function reconnect()
     {
@@ -388,9 +385,9 @@ class Connection
      *
      * @param Closure $operation
      *
-     * @return mixed
-     *
      * @throws LdapRecordException
+     *
+     * @return mixed
      */
     protected function runOperationCallback(Closure $operation)
     {
@@ -404,6 +401,10 @@ class Connection
      */
     public function auth()
     {
+        if (! $this->ldap->isConnected()) {
+            $this->initialize();
+        }
+
         $guard = call_user_func($this->authGuardResolver);
 
         $guard->setDispatcher(
@@ -441,9 +442,9 @@ class Connection
      * @param LdapRecordException $e
      * @param Closure             $operation
      *
-     * @return mixed
-     *
      * @throws LdapRecordException
+     *
+     * @return mixed
      */
     protected function tryAgainIfCausedByLostConnection(LdapRecordException $e, Closure $operation)
     {
@@ -462,9 +463,9 @@ class Connection
      *
      * @param Closure $operation
      *
-     * @return mixed
-     *
      * @throws LdapRecordException
+     *
+     * @return mixed
      */
     protected function retry(Closure $operation)
     {
@@ -485,9 +486,9 @@ class Connection
      * @param LdapRecordException $e
      * @param Closure             $operation
      *
-     * @return mixed
-     *
      * @throws LdapRecordException
+     *
+     * @return mixed
      */
     protected function retryOnNextHost(LdapRecordException $e, Closure $operation)
     {

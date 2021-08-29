@@ -181,9 +181,9 @@ class Builder extends BaseBuilder
      * @param string       $value
      * @param array|string $columns
      *
-     * @return Model
-     *
      * @throws ModelNotFoundException
+     *
+     * @return Model
      */
     public function findByAnrOrFail($value, $columns = ['*'])
     {
@@ -271,9 +271,9 @@ class Builder extends BaseBuilder
      * @param string       $guid
      * @param array|string $columns
      *
-     * @return Model|static
-     *
      * @throws ModelNotFoundException
+     *
+     * @return Model|static
      */
     public function findByGuidOrFail($guid, $columns = ['*'])
     {
@@ -287,7 +287,7 @@ class Builder extends BaseBuilder
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function getQuery()
     {
@@ -424,7 +424,7 @@ class Builder extends BaseBuilder
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected function prepareWhereValue($field, $value, $raw = false)
     {

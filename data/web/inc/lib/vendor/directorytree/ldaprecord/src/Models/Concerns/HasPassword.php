@@ -159,9 +159,9 @@ trait HasPassword
      * @param string $password
      * @param string $salt
      *
-     * @return string
-     *
      * @throws LdapRecordException
+     *
+     * @return string
      */
     protected function getHashedPassword($method, $password, $salt = null)
     {
@@ -179,13 +179,21 @@ trait HasPassword
     /**
      * Validates that the current LDAP connection is secure.
      *
-     * @return void
-     *
      * @throws ConnectionException
+     *
+     * @return void
      */
     protected function validateSecureConnection()
     {
-        if (! $this->getConnection()->getLdapConnection()->canChangePasswords()) {
+        $connection = $this->getConnection();
+
+        if ($connection->isConnected()) {
+            $secure = $connection->getLdapConnection()->canChangePasswords();
+        } else {
+            $secure = $connection->getConfiguration()->get('use_ssl') || $connection->getConfiguration()->get('use_tls');
+        }
+
+        if (! $secure) {
             throw new ConnectionException(
                 'You must be connected to your LDAP server with TLS or SSL to perform this operation.'
             );
@@ -215,16 +223,18 @@ trait HasPassword
      */
     public function determinePasswordHashMethod()
     {
-        if (! ($password = $this->password)) {
+        if (! $password = $this->password) {
             return;
         }
 
-        if (! ($method = Password::getHashMethod($password))) {
+        if (! $method = Password::getHashMethod($password)) {
             return;
         }
 
         [,$algo] = array_pad(
-            Password::getHashMethodAndAlgo($password) ?? [], $length = 2, $value = null
+            Password::getHashMethodAndAlgo($password) ?? [],
+            $length = 2,
+            $value = null
         );
 
         switch ($algo) {
