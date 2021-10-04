@@ -1,10 +1,3 @@
--- Load sendgrid ID validator, thanks to https://github.com/fatalbanana
-local rspamd_util = require 'rspamd_util'
-local f = '/etc/rspamd/lua/ivm-sg.lua'
-if rspamd_util.file_exists(f) then
-  dofile(f)
-end
-
 rspamd_config.MAILCOW_AUTH = {
 	callback = function(task)
 		local uname = task:get_user()
@@ -500,7 +493,7 @@ rspamd_config:register_symbol({
   type = 'postfilter',
   callback = function(task)
     local from = task:get_header('From')
-    if from and monitoring_hosts:get_key(from) then
+    if from and (monitoring_hosts:get_key(from) or from == "watchdog@localhost") then
       task:set_flag('no_log')
       task:set_flag('no_stat')
     end
