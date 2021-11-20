@@ -12,8 +12,8 @@ if [[ "$(uname -r)" =~ ^4\.4\. ]]; then
   if grep -q Ubuntu <<< $(uname -a); then
     echo "DO NOT RUN mailcow ON THIS UBUNTU KERNEL!";
     echo "Please update to linux-generic-hwe-16.04 by running \"apt-get install --install-recommends linux-generic-hwe-16.04\""
+    exit 1
   fi
-  exit 1
 fi
 
 if grep --help 2>&1 | grep -q -i "busybox"; then
@@ -286,6 +286,9 @@ WATCHDOG_NOTIFY_BAN=n
 # No data is collected. Opt-in and anonymous.
 # Will only work with unmodified mailcow setups.
 WATCHDOG_EXTERNAL_CHECKS=n
+
+# Enable watchdog verbose logging
+WATCHDOG_VERBOSE=n
 
 # Max log lines per service to keep in Redis logs
 
