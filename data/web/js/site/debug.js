@@ -78,6 +78,7 @@ jQuery(function($){
         {"name":"time","formatter":function unix_time_format(tm) { var date = new Date(tm ? tm * 1000 : 0); return date.toLocaleDateString(undefined, {year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit"});},"title":lang.time,"style":{"width":"170px"}},
         {"name":"ua","title":"User-Agent","style":{"min-width":"200px"}},
         {"name":"user","title":"Username","style":{"min-width":"200px"}},
+        {"name":"ip","title":"IP","style":{"min-width":"200px"}},
         {"name":"service","title":"Service"},
       ],
       "rows": $.ajax({
@@ -706,9 +707,7 @@ jQuery(function($){
       $.each(data, function (i, item) {
         if (item === null) { return true; }
         item.username = escapeHtml(item.username);
-        if (item.service == "smtp") { item.service = '<div class="label label-default">' + item.service.toUpperCase() + '<i class="bi bi-chevron-compact-right"></i></div>'; }
-        else if (item.service == "imap") { item.service = '<div class="label label-default"><i class="bi bi-chevron-compact-left"></i> ' + item.service.toUpperCase() + '</div>'; }
-        else { item.service = '<div class="label label-default">' + item.service.toUpperCase() + '</div>'; }
+        item.service = '<div class="label label-default">' + item.service.toUpperCase() + '</div>';
     });
     } else if (table == 'general_syslog') {
       $.each(data, function (i, item) {

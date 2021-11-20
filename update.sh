@@ -46,7 +46,7 @@ done
 
 export LC_ALL=C
 DATE=$(date +%Y-%m-%d_%H_%M_%S)
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH=$(cd ${SCRIPT_DIR}; git rev-parse --abbrev-ref HEAD)
 
 check_online_status() {
   CHECK_ONLINE_IPS=(1.1.1.1 9.9.9.9 8.8.8.8)
@@ -79,7 +79,7 @@ prefetch_images() {
 
 docker_garbage() {
   IMGS_TO_DELETE=()
-  for container in $(grep -oP "image: \Kmailcow.+" docker-compose.yml); do
+  for container in $(grep -oP "image: \Kmailcow.+" "${SCRIPT_DIR}/docker-compose.yml"); do
     REPOSITORY=${container/:*}
     TAG=${container/*:}
     V_MAIN=${container/*.}
@@ -121,9 +121,9 @@ docker_garbage() {
       echo "Running image removal without extra confirmation due to force mode."
       docker rmi ${IMGS_TO_DELETE[*]}
     fi
+    echo -e "\e[32mFurther cleanup...\e[0m"
+    echo "If you want to cleanup further garbage collected by Docker, please make sure all containers are up and running before cleaning your system by executing \"docker system prune\""
   fi
-  echo -e "\e[32mFurther cleanup...\e[0m"
-  echo "If you want to cleanup further garbage collected by Docker, please make sure all containers are up and running before cleaning your system by executing \"docker system prune\""
 }
 
 in_array() {
@@ -232,7 +232,7 @@ while (($#)); do
       exit 0
     ;;
     -f|--force)
-      echo -e "\e[32mForcing Update...\e[0m"
+      echo -e "\e[32mRunning in forced mode...\e[0m"
       FORCE=y
     ;;
     --no-update-compose)
@@ -306,6 +306,7 @@ CONFIG_ARRAY=(
   "MAILCOW_PASS_SCHEME"
   "ADDITIONAL_SERVER_NAMES"
   "ACME_CONTACT"
+  "WATCHDOG_VERBOSE"
 )
 
 sed -i --follow-symlinks '$a\' mailcow.conf
@@ -512,6 +513,11 @@ for option in ${CONFIG_ARRAY[@]}; do
       echo '# Setting it at a later point will require the following steps:' >> mailcow.conf
       echo '# https://mailcow.github.io/mailcow-dockerized-docs/debug-reset-tls/' >> mailcow.conf
       echo 'ACME_CONTACT=' >> mailcow.conf
+  fi
+elif [[ ${option} == "WATCHDOG_VERBOSE" ]]; then
+    if ! grep -q ${option} mailcow.conf; then
+      echo '# Enable watchdog verbose logging' >> mailcow.conf
+      echo 'WATCHDOG_VERBOSE=n' >> mailcow.conf
   fi
   elif ! grep -q ${option} mailcow.conf; then
     echo "Adding new option \"${option}\" to mailcow.conf"
