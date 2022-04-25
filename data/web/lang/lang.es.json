@@ -18,7 +18,8 @@
         "spam_score": "Puntuación de spam",
         "syncjobs": "Trabajos de sincronización",
         "tls_policy": "Póliza de TLS",
-        "unlimited_quota": "Cuota ilimitada para buzones"
+        "unlimited_quota": "Cuota ilimitada para buzones",
+        "app_passwds": "Gestionar las contraseñas de aplicaciones"
     },
     "add": {
         "activate_filter_warn": "Todos los demás filtros se desactivarán cuando este filtro se active.",
@@ -223,7 +224,7 @@
         "rsettings_insert_preset": "Insertar ejemplo preestablecido \"%s\"",
         "rsettings_preset_1": "Deshabilita todos menos DKIM y el límite de velocidad para usuarios autenticados",
         "rsettings_preset_2": "Postmaster quiere correo no deseado",
-        "rspamd-com_settings": "<a href=\"https://rspamd.com/doc/configuration/settings.html#settings-structure\" target=\"_blank\">Documentación de Rspamd</a>\r\n  - Se generará automáticamente un nombre de configuración, consulte los ajustes preestablecidos de ejemplo a continuación:",
+        "rspamd_com_settings": "<a href=\"https://rspamd.com/doc/configuration/settings.html#settings-structure\" target=\"_blank\">Documentación de Rspamd</a>\r\n  - Se generará automáticamente un nombre de configuración, consulte los ajustes preestablecidos de ejemplo a continuación:",
         "rspamd_settings_map": "Reglas de ajustes de rspamd",
         "save": "Guardar cambios",
         "search_domain_da": "Buscar dominios",
@@ -323,7 +324,7 @@
         "tls_policy_map_parameter_invalid": "El parámetro de póliza no es válido.",
         "totp_verification_failed": "Verificación TOTP fallida",
         "transport_dest_exists": "Destino de la regla de transporte ya existe",
-        "u2f_verification_failed": "Verificación U2F fallida: %s",
+        "webauthn_verification_failed": "Verificación WebAuthn fallida: %s",
         "unknown": "Se produjo un error desconocido",
         "unknown_tfa_method": "Método TFA desconocido",
         "unlimited_quota_acl": "Cuota ilimitada restringida por controles administrativos",
@@ -649,7 +650,7 @@
         "tls_policy_map_entry_deleted": "Regla de póliza de TLS con ID %s ha sido elimindada",
         "tls_policy_map_entry_saved": "Regla de póliza de TLS \"%s\" ha sido guardada",
         "verified_totp_login": "Inicio de sesión TOTP verificado",
-        "verified_u2f_login": "Inicio de sesión U2F verificado",
+        "verified_webauthn_login": "Inicio de sesión WebAuthn verificado",
         "verified_yotp_login": "Inicio de sesión Yubico OTP verificado"
     },
     "tfa": {
@@ -667,9 +668,9 @@
         "set_tfa": "Establecer el método de autenticación de dos factores",
         "tfa": "Autenticación de dos factores",
         "totp": "OTP basado en tiempo (Google Authenticator, Authy, etc.)",
-        "u2f": "Autenticación U2F",
-        "waiting_usb_auth": "<i>Esperando al dispositivo USB...</i><br><br>Toque el botón en su dispositivo USB U2F ahora.",
-        "waiting_usb_register": "<i>Esperando al dispositivo USB....</i><br><br>Ingrese su contraseña arriba y confirme su registro U2F tocando el botón en su dispositivo USB U2F.",
+        "webauthn": "Autenticación WebAuthn",
+        "waiting_usb_auth": "<i>Esperando al dispositivo USB...</i><br><br>Toque el botón en su dispositivo USB WebAuthn ahora.",
+        "waiting_usb_register": "<i>Esperando al dispositivo USB....</i><br><br>Ingrese su contraseña arriba y confirme su registro WebAuthn tocando el botón en su dispositivo USB WebAuthn.",
         "yubi_otp": "Yubico OTP"
     },
     "user": {

@@ -17,12 +17,18 @@ if (is_array($alertbox_log_parser)) {
   }
   $alert = array_filter(array_unique($alerts));
   foreach($alert as $alert_type => $alert_msg) {
-    $alerts[$alert_type] = implode('<hr class="alert-hr">', $alert_msg);
+    // html breaks from mysql alerts, replace ` with '
+    $alerts[$alert_type] = implode('<hr class="alert-hr">', str_replace("`", "'", $alert_msg));
   }
   unset($_SESSION['return']);
 }
 
+// globals
 $globalVariables = [
+  'mailcow_info' => array(
+    'version_tag' => $GLOBALS['MAILCOW_GIT_VERSION'],
+    'git_project_url' => $GLOBALS['MAILCOW_GIT_URL']
+  ),
   'js_path' => '/cache/'.basename($JSPath),
   'pending_tfa_method' => @$_SESSION['pending_tfa_method'],
   'pending_mailcow_cc_username' => @$_SESSION['pending_mailcow_cc_username'],
