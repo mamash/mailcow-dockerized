@@ -2,7 +2,7 @@ version: '2.1'
 services:
 
     unbound-mailcow:
-      image: mailcow/unbound:1.14
+      image: mailcow/unbound:1.15
       environment:
         - TZ=${TZ}
       volumes:
@@ -58,7 +58,7 @@ services:
             - redis
 
     clamd-mailcow:
-      image: mailcow/clamd:1.42
+      image: mailcow/clamd:1.50
       restart: always
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
@@ -67,13 +67,14 @@ services:
         - SKIP_CLAMD=${SKIP_CLAMD:-n}
       volumes:
         - ./data/conf/clamav/:/etc/clamav/:Z
+        - clamd-db-vol-1:/var/lib/clamav:z
       networks:
         mailcow-network:
           aliases:
             - clamd
 
     rspamd-mailcow:
-      image: mailcow/rspamd:1.79
+      image: mailcow/rspamd:1.90
       stop_grace_period: 30s
       depends_on:
         - dovecot-mailcow
@@ -157,6 +158,7 @@ services:
         - ALLOW_ADMIN_EMAIL_LOGIN=${ALLOW_ADMIN_EMAIL_LOGIN:-n}
         - MASTER=${MASTER:-y}
         - DEV_MODE=${DEV_MODE:-n}
+        - WEBAUTHN_ONLY_TRUSTED_VENDORS=${WEBAUTHN_ONLY_TRUSTED_VENDORS:-n}
       restart: always
       networks:
         mailcow-network:
@@ -164,7 +166,7 @@ services:
             - phpfpm
 
     sogo-mailcow:
-      image: mailcow/sogo:1.104
+      image: mailcow/sogo:1.107
       environment:
         - DBNAME=${DBNAME}
         - DBUSER=${DBUSER}
@@ -199,7 +201,7 @@ services:
         ofelia.job-exec.sogo_sessions.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && /usr/local/bin/gosu sogo /usr/sbin/sogo-tool expire-sessions $${SOGO_EXPIRE_SESSION} || exit 0\""
         ofelia.job-exec.sogo_ealarms.schedule: "@every 1m"
         ofelia.job-exec.sogo_ealarms.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && /usr/local/bin/gosu sogo /usr/sbin/sogo-ealarms-notify -p /etc/sogo/sieve.creds || exit 0\""
-        ofelia.job-exec.sogo_eautoreply.schedule: "@every 24h"
+        ofelia.job-exec.sogo_eautoreply.schedule: "@every 5m"
         ofelia.job-exec.sogo_eautoreply.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && /usr/local/bin/gosu sogo /usr/sbin/sogo-tool update-autoreply -p /etc/sogo/sieve.creds || exit 0\""
         ofelia.job-exec.sogo_backup.schedule: "@every 24h"
         ofelia.job-exec.sogo_backup.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && /usr/local/bin/gosu sogo /usr/sbin/sogo-tool backup /sogo_backup ALL || exit 0\""
@@ -211,7 +213,7 @@ services:
             - sogo
 
     dovecot-mailcow:
-      image: mailcow/dovecot:1.158
+      image: mailcow/dovecot:1.161
       depends_on:
         - mysql-mailcow
       dns:
@@ -384,7 +386,7 @@ services:
     acme-mailcow:
       depends_on:
         - nginx-mailcow
-      image: mailcow/acme:1.80
+      image: mailcow/acme:1.81
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
       environment:
@@ -420,7 +422,7 @@ services:
             - acme
 
     netfilter-mailcow:
-      image: mailcow/netfilter:1.45
+      image: mailcow/netfilter:1.46
       stop_grace_period: 30s
       depends_on:
         - dovecot-mailcow
@@ -443,7 +445,7 @@ services:
         - /lib/modules:/lib/modules:ro
 
     watchdog-mailcow:
-      image: mailcow/watchdog:1.95
+      image: mailcow/watchdog:1.96
       dns:
         - ${IPV4_NETWORK:-172.22.1}.254
       tmpfs:
@@ -463,7 +465,7 @@ services:
         - DBPASS=${DBPASS}
         - DBROOT=${DBROOT}
         - USE_WATCHDOG=${USE_WATCHDOG:-n}
-        - WATCHDOG_NOTIFY_EMAIL=${WATCHDOG_NOTIFY_EMAIL}
+        - WATCHDOG_NOTIFY_EMAIL=${WATCHDOG_NOTIFY_EMAIL:-}
         - WATCHDOG_NOTIFY_BAN=${WATCHDOG_NOTIFY_BAN:-y}
         - WATCHDOG_SUBJECT=${WATCHDOG_SUBJECT:-Watchdog ALERT}
         - WATCHDOG_EXTERNAL_CHECKS=${WATCHDOG_EXTERNAL_CHECKS:-n}
@@ -505,7 +507,7 @@ services:
             - watchdog
 
     dockerapi-mailcow:
-      image: mailcow/dockerapi:1.40
+      image: mailcow/dockerapi:1.41
       security_opt:
         - label=disable
       restart: always
@@ -523,7 +525,7 @@ services:
             - dockerapi
 
     solr-mailcow:
-      image: mailcow/solr:1.8
+      image: mailcow/solr:1.8.1
       restart: always
       volumes:
         - solr-vol-1:/opt/solr/server/solr/dovecot-fts/data:Z
@@ -539,7 +541,7 @@ services:
             - solr
 
     olefy-mailcow:
-      image: mailcow/olefy:1.8
+      image: mailcow/olefy:1.9
       restart: always
       environment:
         - TZ=${TZ}
@@ -547,7 +549,7 @@ services:
         - OLEFY_BINDPORT=10055
         - OLEFY_TMPDIR=/tmp
         - OLEFY_PYTHON_PATH=/usr/bin/python3
-        - OLEFY_OLEVBA_PATH=/usr/bin/olevba3
+        - OLEFY_OLEVBA_PATH=/usr/bin/olevba
         - OLEFY_LOGLVL=20
         - OLEFY_MINLENGTH=500
         - OLEFY_DEL_TMP=1
@@ -560,6 +562,7 @@ services:
       image: mcuadros/ofelia:latest
       restart: always
       command: daemon --docker
+      environment:
         - TZ=${TZ}
       depends_on:
         - sogo-mailcow
@@ -629,3 +632,4 @@ volumes:
   crypt-vol-1:
   sogo-web-vol-1:
   sogo-userdata-backup-vol-1:
+  clamd-db-vol-1:
