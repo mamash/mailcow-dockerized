@@ -130,11 +130,17 @@ query = SELECT GROUP_CONCAT(transport SEPARATOR '') AS transport_maps
       LEFT OUTER JOIN mailbox ON JSON_UNQUOTE(JSON_VALUE(mailbox.attributes, '$.relayhost')) = relayhosts.id
         WHERE relayhosts.active = '1'
           AND (
-            mailbox.username IN (SELECT alias.goto from alias
+            mailbox.username IN (
+	    SELECT alias.goto from alias
               JOIN mailbox ON mailbox.username = alias.goto
                 WHERE alias.active = '1'
                   AND alias.address = '%s'
                   AND alias.address NOT LIKE '@%%'
+            UNION
+            SELECT sender_acl.logged_in_as from sender_acl
+              JOIN mailbox ON mailbox.username = sender_acl.logged_in_as
+                WHERE sender_acl.external = '1'
+                  AND sender_acl.send_as = '%s'
             )
           )
       ),
@@ -202,6 +208,11 @@ query = SELECT CONCAT_WS(':', username, password) AS auth_data FROM relayhosts
                 WHERE alias.active = '1'
                   AND alias.address = '%s'
                   AND alias.address NOT LIKE '@%%'
+            UNION
+            SELECT sender_acl.logged_in_as from sender_acl
+              JOIN mailbox ON mailbox.username = sender_acl.logged_in_as
+                WHERE sender_acl.external = '1'
+                  AND sender_acl.send_as = '%s'
           )
         )
       )
