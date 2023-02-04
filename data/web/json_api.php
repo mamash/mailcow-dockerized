@@ -14,17 +14,20 @@ function api_log($_data) {
     if ($data == 'csrf_token') {
       continue;
     }
-    if ($value = json_decode($value, true)) {
-      unset($value["csrf_token"]);
+
+    $value = json_decode($value, true);     
+    if ($value) {
+      if (is_array($value)) unset($value["csrf_token"]);
       foreach ($value as $key => &$val) {
         if(preg_match("/pass/i", $key)) {
           $val = '*';
         }
       }
-      $value = json_encode($value);
+      $value = json_encode($value);  
     }
     $data_var[] = $data . "='" . $value . "'";
   }
+
   try {
     $log_line = array(
       'time' => time(),
@@ -41,7 +44,7 @@ function api_log($_data) {
       'msg' => 'Redis: '.$e
     );
     return false;
-  }
+  }     
 }
 
 if (isset($_GET['query'])) {
@@ -82,9 +85,9 @@ if (isset($_GET['query'])) {
     if ($action == 'delete') {
       $_POST['items'] = $request;
     }
-
   }
   api_log($_POST);
+
 
   $request_incomplete = json_encode(array(
     'type' => 'error',
@@ -175,15 +178,22 @@ if (isset($_GET['query'])) {
               // parse post data
               $post = trim(file_get_contents('php://input'));
               if ($post) $post = json_decode($post);
-
-              // decode base64 strings
-              $clientDataJSON = base64_decode($post->clientDataJSON);
-              $attestationObject = base64_decode($post->attestationObject);             
               
               // process registration data from authenticator
               try {
+                // decode base64 strings
+                $clientDataJSON = base64_decode($post->clientDataJSON);
+                $attestationObject = base64_decode($post->attestationObject);   
+
                 // processCreate($clientDataJSON, $attestationObject, $challenge, $requireUserVerification=false, $requireUserPresent=true, $failIfRootMismatch=true)
                 $data = $WebAuthn->processCreate($clientDataJSON, $attestationObject, $_SESSION['challenge'], false, true);
+
+                // safe authenticator in mysql `tfa` table
+                $_data['tfa_method'] = $post->tfa_method;
+                $_data['key_id'] = $post->key_id;
+                $_data['confirm_password'] = $post->confirm_password;
+                $_data['registration'] = $data;
+                set_tfa($_data);
               }
               catch (Throwable $ex) {
                 // err
@@ -194,11 +204,6 @@ if (isset($_GET['query'])) {
                 exit;
               }
 
-              // safe authenticator in mysql `tfa` table
-              $_data['tfa_method'] = $post->tfa_method;
-              $_data['key_id'] = $post->key_id;
-              $_data['registration'] = $data;
-              set_tfa($_data);
 
               // send response
               $return = new stdClass();
@@ -225,13 +230,27 @@ if (isset($_GET['query'])) {
           process_add_return(rsettings('add', $attr));
         break;
         case "mailbox":
-          process_add_return(mailbox('add', 'mailbox', $attr));
+          switch ($object) {
+            case "template":
+              process_add_return(mailbox('add', 'mailbox_templates', $attr));
+            break;
+            default:
+              process_add_return(mailbox('add', 'mailbox', $attr));
+            break;
+          }
         break;
         case "oauth2-client":
           process_add_return(oauth2('add', 'client', $attr));
         break;
         case "domain":
-          process_add_return(mailbox('add', 'domain', $attr));
+          switch ($object) {
+            case "template":
+              process_add_return(mailbox('add', 'domain_templates', $attr));
+            break;
+            default:
+              process_add_return(mailbox('add', 'domain', $attr));
+            break;
+          }  
         break;
         case "resource":
           process_add_return(mailbox('add', 'resource', $attr));
@@ -268,6 +287,18 @@ if (isset($_GET['query'])) {
         break;
         case "domain-admin":
           process_add_return(domain_admin('add', $attr));
+        break;
+        case "sso":
+          switch ($object) {
+            case "domain-admin":
+              $data = domain_admin_sso('issue', $attr);
+              if($data) {
+                echo json_encode($data);
+                exit(0);
+              }
+              process_add_return($data);
+            break;
+          }
         break;
         case "admin":
           process_add_return(admin('add', $attr));
@@ -416,7 +447,7 @@ if (isset($_GET['query'])) {
           // }
           $ids = NULL;
 
-          $getArgs = $WebAuthn->getGetArgs($ids, 30, true, true, true, true, $GLOBALS['FIDO2_UV_FLAG_LOGIN']);
+          $getArgs = $WebAuthn->getGetArgs($ids, 30, false, false, false, false, $GLOBALS['FIDO2_UV_FLAG_LOGIN']);
           print(json_encode($getArgs));
           $_SESSION['challenge'] = $WebAuthn->getChallenge();
           return;
@@ -425,8 +456,11 @@ if (isset($_GET['query'])) {
         case "webauthn-tfa-registration":
           if (isset($_SESSION["mailcow_cc_role"])) {
               // Exclude existing CredentialIds, if any
-              $stmt = $pdo->prepare("SELECT `keyHandle` FROM `tfa` WHERE username = :username");
-              $stmt->execute(array(':username' => $_SESSION['mailcow_cc_username']));
+              $stmt = $pdo->prepare("SELECT `keyHandle` FROM `tfa` WHERE username = :username AND authmech = :authmech");
+              $stmt->execute(array(
+                ':username' => $_SESSION['mailcow_cc_username'],
+                ':authmech' => 'webauthn'
+              ));
               $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
               while($row = array_shift($rows)) {
                 $excludeCredentialIds[] = base64_decode($row['keyHandle']);
@@ -447,20 +481,24 @@ if (isset($_GET['query'])) {
           }
         break;
         case "webauthn-tfa-get-args":
-          $stmt = $pdo->prepare("SELECT `keyHandle` FROM `tfa` WHERE username = :username");
-          $stmt->execute(array(':username' => $_SESSION['pending_mailcow_cc_username']));
+          $stmt = $pdo->prepare("SELECT `keyHandle` FROM `tfa` WHERE username = :username AND authmech = :authmech");
+          $stmt->execute(array(
+            ':username' => $_SESSION['pending_mailcow_cc_username'],
+            ':authmech' => 'webauthn'
+          ));
           $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-          while($row = array_shift($rows)) {
-            $cids[] = base64_decode($row['keyHandle']);
-          }
-          if (count($cids) == 0) {
+          if (count($rows) == 0) {
             print(json_encode(array(
                 'type' => 'error',
                 'msg' => 'Cannot find matching credentialIds'
             )));
+            exit;
+          }
+          while($row = array_shift($rows)) {
+            $cids[] = base64_decode($row['keyHandle']);
           }
 
-          $getArgs = $WebAuthn->getGetArgs($cids, 30, true, true, true, true, $GLOBALS['WEBAUTHN_UV_FLAG_LOGIN']);
+          $getArgs = $WebAuthn->getGetArgs($cids, 30, false, false, false, false, $GLOBALS['WEBAUTHN_UV_FLAG_LOGIN']);
           $getArgs->publicKey->extensions = array('appid' => "https://".$getArgs->publicKey->rpId);
           print(json_encode($getArgs));
           $_SESSION['challenge'] = $WebAuthn->getChallenge();
@@ -486,7 +524,12 @@ if (isset($_GET['query'])) {
           case "domain":
             switch ($object) {
               case "all":
-                $domains = mailbox('get', 'domains');
+                $tags = null;
+                if (isset($_GET['tags']) && $_GET['tags'] != '') 
+                  $tags = explode(',', $_GET['tags']);
+
+                $domains = mailbox('get', 'domains', null, $tags);
+
                 if (!empty($domains)) {
                   foreach ($domains as $domain) {
                     if ($details = mailbox('get', 'domain_details', $domain)) {
@@ -502,7 +545,16 @@ if (isset($_GET['query'])) {
                   echo '{}';
                 }
               break;
-
+              case "template":
+                switch ($extra){
+                  case "all":
+                    process_get_return(mailbox('get', 'domain_templates'));
+                  break;
+                  default:
+                    process_get_return(mailbox('get', 'domain_templates', $extra));
+                  break;
+                }
+              break;
               default:
                 $data = mailbox('get', 'domain_details', $object);
                 process_get_return($data);
@@ -514,6 +566,15 @@ if (isset($_GET['query'])) {
             switch ($object) {
               case "html":
                 $password_complexity_rules = password_complexity('html');
+                if ($password_complexity_rules !== false) {
+                  process_get_return($password_complexity_rules);
+                }
+                else {
+                  echo '{}';
+                }
+              break;
+              default:
+                $password_complexity_rules = password_complexity('get');
                 if ($password_complexity_rules !== false) {
                   process_get_return($password_complexity_rules);
                 }
@@ -952,23 +1013,20 @@ if (isset($_GET['query'])) {
             switch ($object) {
               case "all":
               case "reduced":
-                if (empty($extra)) {
-                  $domains = mailbox('get', 'domains');
-                }
-                else {
-                  $domains = explode(',', $extra);
-                }
+                $tags = null;
+                if (isset($_GET['tags']) && $_GET['tags'] != '') 
+                  $tags = explode(',', $_GET['tags']);
+
+                if (empty($extra)) $domains = mailbox('get', 'domains');
+                else $domains = explode(',', $extra);
+
                 if (!empty($domains)) {
                   foreach ($domains as $domain) {
-                    $mailboxes = mailbox('get', 'mailboxes', $domain);
+                    $mailboxes = mailbox('get', 'mailboxes', $domain, $tags);
                     if (!empty($mailboxes)) {
                       foreach ($mailboxes as $mailbox) {
-                        if ($details = mailbox('get', 'mailbox_details', $mailbox, $object)) {
-                          $data[] = $details;
-                        }
-                        else {
-                          continue;
-                        }
+                        if ($details = mailbox('get', 'mailbox_details', $mailbox, $object)) $data[] = $details;
+                        else continue;
                       }
                     }
                   }
@@ -978,10 +1036,34 @@ if (isset($_GET['query'])) {
                   echo '{}';
                 }
               break;
-
+              case "template":
+                switch ($extra){
+                  case "all":
+                    process_get_return(mailbox('get', 'mailbox_templates'));
+                  break;
+                  default:
+                    process_get_return(mailbox('get', 'mailbox_templates', $extra));
+                  break;
+                }
+              break;
               default:
-                $data = mailbox('get', 'mailbox_details', $object);
-                process_get_return($data);
+                $tags = null;
+                if (isset($_GET['tags']) && $_GET['tags'] != '') 
+                  $tags = explode(',', $_GET['tags']);
+
+                if ($tags === null) {
+                  $data = mailbox('get', 'mailbox_details', $object);
+                  process_get_return($data);
+                } else {
+                  $mailboxes = mailbox('get', 'mailboxes', $object, $tags);
+                  if (is_array($mailboxes)) {
+                    foreach ($mailboxes as $mailbox) {
+                      if ($details = mailbox('get', 'mailbox_details', $mailbox)) 
+                        $data[] = $details;
+                    }
+                  }
+                  process_get_return($data, false);
+                }
               break;
             }
           break;
@@ -1443,6 +1525,10 @@ if (isset($_GET['query'])) {
                   }
                   echo json_encode($temp, JSON_UNESCAPED_SLASHES);
                 break;
+                case "container":
+                  $container_stats = docker('container_stats', $extra);
+                  echo json_encode($container_stats);
+                break;
                 case "vmail":
                   $exec_fields_vmail = array('cmd' => 'system', 'task' => 'df', 'dir' => '/var/vmail');
                   $vmail_df = explode(',', json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields_vmail), true));
@@ -1454,24 +1540,54 @@ if (isset($_GET['query'])) {
                     'used_percent' => $vmail_df[4]
                   );
                   echo json_encode($temp, JSON_UNESCAPED_SLASHES);
-              break;
-              case "solr":
-                $solr_status = solr_status();
-                $solr_size = ($solr_status['status']['dovecot-fts']['index']['size']);
-                $solr_documents = ($solr_status['status']['dovecot-fts']['index']['numDocs']);
-                if (strtolower(getenv('SKIP_SOLR')) != 'n') {
-                  $solr_enabled = false;
-                }
-                else {
-                  $solr_enabled = true;
-                }
-                echo json_encode(array(
-                  'type' => 'info',
-                  'solr_enabled' => $solr_enabled,
-                  'solr_size' => $solr_size,
-                  'solr_documents' => $solr_documents
-                ));
-              break;
+                break;
+                case "solr":
+                  $solr_status = solr_status();
+                  $solr_size = ($solr_status['status']['dovecot-fts']['index']['size']);
+                  $solr_documents = ($solr_status['status']['dovecot-fts']['index']['numDocs']);
+                  if (strtolower(getenv('SKIP_SOLR')) != 'n') {
+                    $solr_enabled = false;
+                  }
+                  else {
+                    $solr_enabled = true;
+                  }
+                  echo json_encode(array(
+                    'type' => 'info',
+                    'solr_enabled' => $solr_enabled,
+                    'solr_size' => $solr_size,
+                    'solr_documents' => $solr_documents
+                  ));
+                break;  
+                case "host":
+                  if (!$extra){
+                    $stats = docker("host_stats");
+                    echo json_encode($stats);
+                  } 
+                  else if ($extra == "ip") {
+                    // get public ips
+                    
+                    $curl = curl_init();
+                    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($curl, CURLOPT_POST, 0);
+                    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+                    curl_setopt($curl, CURLOPT_TIMEOUT, 15);
+                    curl_setopt($curl, CURLOPT_URL, 'http://ipv4.mailcow.email');
+                    $ipv4 = curl_exec($curl);
+                    curl_setopt($curl, CURLOPT_URL, 'http://ipv6.mailcow.email');
+                    $ipv6 = curl_exec($curl);
+                    $ips = array(
+                      "ipv4" => $ipv4,
+                      "ipv6" => $ipv6
+                    );
+                    curl_close($curl);
+                    echo json_encode($ips);
+                  }
+                break;
+                case "version":
+                  echo json_encode(array(
+                    'version' => $GLOBALS['MAILCOW_GIT_VERSION']
+                  ));
+                break;
               }
             }
           break;
@@ -1575,13 +1691,31 @@ if (isset($_GET['query'])) {
           process_delete_return(dkim('delete', array('domains' => $items)));
         break;
         case "domain":
-          process_delete_return(mailbox('delete', 'domain', array('domain' => $items)));
+          switch ($object){
+            case "tag":
+              process_delete_return(mailbox('delete', 'tags_domain', array('tags' => $items, 'domain' => $extra)));
+            break;
+            case "template":
+              process_delete_return(mailbox('delete', 'domain_templates', array('ids' => $items)));
+            break;
+            default:
+              process_delete_return(mailbox('delete', 'domain', array('domain' => $items)));
+          }
         break;
         case "alias-domain":
           process_delete_return(mailbox('delete', 'alias_domain', array('alias_domain' => $items)));
         break;
         case "mailbox":
-          process_delete_return(mailbox('delete', 'mailbox', array('username' => $items)));
+          switch ($object){
+            case "tag":
+              process_delete_return(mailbox('delete', 'tags_mailbox', array('tags' => $items, 'username' => $extra)));
+            break;
+            case "template":
+              process_delete_return(mailbox('delete', 'mailbox_templates', array('ids' => $items)));
+            break;
+            default:
+              process_delete_return(mailbox('delete', 'mailbox', array('username' => $items)));
+          }
         break;
         case "resource":
           process_delete_return(mailbox('delete', 'resource', array('name' => $items)));
@@ -1740,7 +1874,14 @@ if (isset($_GET['query'])) {
           process_edit_return(mailbox('edit', 'time_limited_alias', array_merge(array('address' => $items), $attr)));
         break;
         case "mailbox":
-          process_edit_return(mailbox('edit', 'mailbox', array_merge(array('username' => $items), $attr)));
+          switch ($object) {
+            case "template":
+              process_edit_return(mailbox('edit', 'mailbox_templates', array_merge(array('ids' => $items), $attr)));
+            break;
+            default:
+              process_edit_return(mailbox('edit', 'mailbox', array_merge(array('username' => $items), $attr)));
+            break;
+          }
         break;
         case "syncjob":
           process_edit_return(mailbox('edit', 'syncjob', array_merge(array('id' => $items), $attr)));
@@ -1752,7 +1893,14 @@ if (isset($_GET['query'])) {
           process_edit_return(mailbox('edit', 'resource', array_merge(array('name' => $items), $attr)));
         break;
         case "domain":
-          process_edit_return(mailbox('edit', 'domain', array_merge(array('domain' => $items), $attr)));
+          switch ($object) {
+            case "template":
+              process_edit_return(mailbox('edit', 'domain_templates', array_merge(array('ids' => $items), $attr)));
+            break;
+            default:
+              process_edit_return(mailbox('edit', 'domain', array_merge(array('domain' => $items), $attr)));
+            break;
+          }
         break;
         case "rl-domain":
           process_edit_return(ratelimit('edit', 'domain', array_merge(array('object' => $items), $attr)));
@@ -1786,6 +1934,9 @@ if (isset($_GET['query'])) {
         break;
         case "ui_texts":
           process_edit_return(customize('edit', 'ui_texts', $attr));
+        break;
+        case "ip_check":
+          process_edit_return(customize('edit', 'ip_check', $attr));
         break;
         case "self":
           if ($_SESSION['mailcow_cc_role'] == "domainadmin") {

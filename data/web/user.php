@@ -20,6 +20,7 @@ if (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == 'doma
     'tfa_data' => $tfa_data,
     'fido2_data' => $fido2_data,
     'lang_user' => json_encode($lang['user']),
+    'lang_datatables' => json_encode($lang['datatables']),
   ];
 }
 elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == 'user') {
@@ -76,6 +77,7 @@ elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == '
     'acl_json' => json_encode($_SESSION['acl']),
     'user_spam_score' => mailbox('get', 'spam_score', $username),
     'tfa_data' => $tfa_data,
+    'tfa_id' => @$_SESSION['tfa_id'],
     'fido2_data' => $fido2_data,
     'mailboxdata' => $mailboxdata,
     'clientconfigstr' => $clientconfigstr,
@@ -88,10 +90,10 @@ elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == '
     'pushover_data' => $pushover_data,
     'lang_user' => json_encode($lang['user']),
     'number_of_app_passwords' => $number_of_app_passwords,
+    'lang_datatables' => json_encode($lang['datatables']),
   ];
 }
-
-if (!isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == 'admin') {
+else {
   header('Location: /');
   exit();
 }
