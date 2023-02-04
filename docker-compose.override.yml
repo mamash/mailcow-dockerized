@@ -1,9 +1,21 @@
 version: '2.1'
+
+volumes:
+  mailman-lib:
+  mailman-postfix:
+  mailman-archives:
+    driver_opts:
+      type: none
+      device: /mnt/mailcow/mailman-archives
+      o: bind
+  vmail-vol-1:
+    driver_opts:
+      type: none
+      device: /mnt/mailcow/vmail
+      o: bind
+
 services:
-  dovecot-mailcow:
-    build: ./data/Dockerfiles/dovecot
-  php-fpm-mailcow:
-    build: ./data/Dockerfiles/phpfpm
+
   mailman:
     build: data/Dockerfiles/mailman
     environment:
@@ -21,10 +33,15 @@ services:
     dns:
       - ${IPV4_NETWORK:-172.22.1}.254
     hostname: mailman
+    restart: always
     networks:
       mailcow-network:
         aliases:
           - mailman
+    logging:
+      options:
+        max-size: "5m"
+
   logz:
     image: "logzio/docker-collector-logs:latest"
     container_name: logz
@@ -32,30 +49,20 @@ services:
       - "LOGZIO_TOKEN=${LOGZIO_TOKEN}"
       - "LOGZIO_REGION=eu"
       - "HOSTNAME=perry"
-      - "skipContainerName=backup,dockerapi,olefy,logz,metrics,nginx,redis,sogo,solr,watchdog"
+      - "skipContainerName=backup,dockerapi,olefy,logz,metrics,nginx,redis,sogo,solr,watchdog,ofelia"
       - "excludeLines=CRON,forwardinghosts,wp-login"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers
+    restart: always
     networks:
       mailcow-network:
         aliases:
           - logz
-  metrics:
-    image: "logzio/docker-collector-metrics:latest"
-    container_name: metrics
-    environment:
-      - "LOGZIO_TOKEN=${LOGZIO_METRICS_TOKEN}"
-      - "LOGZIO_REGION=eu"
-      - "LOGZIO_MODULES=system,docker"
-      - "HOSTNAME=perry"
-      - "DOCKER_SKIP_CONTAINER_NAME=backup,dockerapi,olefy,logz,metrics,sogo,watchdog"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      mailcow-network:
-        aliases:
-          - metrics
+    logging:
+      options:
+        max-size: "5m"
+
   dmarc:
     build: ./data/Dockerfiles/dmarc
     #image: "gutmensch/dmarc-report:latest"
@@ -75,20 +82,112 @@ services:
       - "PARSER_IMAP_READ_FOLDER=INBOX"
       - "PARSER_IMAP_MOVE_FOLDER=Processed"
       - "PARSER_IMAP_MOVE_FOLDER_ERR=Error"
+    restart: always
     networks:
       mailcow-network:
         aliases:
           - dmarc
-volumes:
-  mailman-lib:
-  mailman-postfix:
-  mailman-archives:
-    driver_opts:
-      type: none
-      device: /mnt/mailcow/mailman-archives
-      o: bind
-  vmail-vol-1:
-    driver_opts:
-      type: none
-      device: /mnt/mailcow/vmail
-      o: bind
+    logging:
+      options:
+        max-size: "5m"
+
+  dovecot-mailcow:
+    build: ./data/Dockerfiles/dovecot
+    labels:
+      ofelia.job-exec.dovecot_recalc_quota.schedule: "@every 24h"
+      ofelia.job-exec.dovecot_recalc_quota.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && doveadm quota recalc -A || exit 0\""
+    logging:
+      options:
+        max-size: "5m"
+
+  postfix-mailcow:
+    build: ./data/Dockerfiles/postfix
+    logging:
+      options:
+        max-size: "5m"
+
+  php-fpm-mailcow:
+    build: ./data/Dockerfiles/phpfpm
+    logging:
+      options:
+        max-size: "5m"
+
+  unbound-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  mysql-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  redis-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  clamd-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  rspamd-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  sogo-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  memcached-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  nginx-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  acme-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  netfilter-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  watchdog-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  dockerapi-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  solr-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  olefy-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  ofelia-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  ipv6nat-mailcow:
+    logging:
+      options:
+        max-size: "5m"
