@@ -58,7 +58,7 @@ services:
             - redis
 
     clamd-mailcow:
-      image: mailcow/clamd:1.60
+      image: mailcow/clamd:1.61
       restart: always
       depends_on:
         - unbound-mailcow
@@ -106,7 +106,7 @@ services:
             - rspamd
 
     php-fpm-mailcow:
-      image: mailcow/phpfpm:1.82
+      image: mailcow/phpfpm:1.84
       command: "php-fpm -d date.timezone=${TZ} -d expose_php=0"
       depends_on:
         - redis-mailcow
@@ -162,6 +162,7 @@ services:
         - DEV_MODE=${DEV_MODE:-n}
         - DEMO_MODE=${DEMO_MODE:-n}
         - WEBAUTHN_ONLY_TRUSTED_VENDORS=${WEBAUTHN_ONLY_TRUSTED_VENDORS:-n}
+        - CLUSTERMODE=${CLUSTERMODE:-}
       restart: always
       networks:
         mailcow-network:
@@ -169,7 +170,7 @@ services:
             - phpfpm
 
     sogo-mailcow:
-      image: mailcow/sogo:1.115
+      image: mailcow/sogo:1.118
       environment:
         - DBNAME=${DBNAME}
         - DBUSER=${DBUSER}
@@ -191,7 +192,7 @@ services:
       volumes:
         - ./data/hooks/sogo:/hooks:Z
         - ./data/conf/sogo/:/etc/sogo/:z
-        - ./data/web/inc/init_db.inc.php:/init_db.inc.php:Z
+        - ./data/web/inc/init_db.inc.php:/init_db.inc.php:z
         - ./data/conf/sogo/custom-favicon.ico:/usr/lib/GNUstep/SOGo/WebServerResources/img/sogo.ico:z
         - ./data/conf/sogo/custom-theme.js:/usr/lib/GNUstep/SOGo/WebServerResources/js/theme.js:z
         - ./data/conf/sogo/custom-sogo.js:/usr/lib/GNUstep/SOGo/WebServerResources/js/custom-sogo.js:z
@@ -216,7 +217,7 @@ services:
             - sogo
 
     dovecot-mailcow:
-      image: mailcow/dovecot:1.22
+      image: mailcow/dovecot:1.24
       depends_on:
         - mysql-mailcow
       dns:
@@ -296,7 +297,7 @@ services:
             - dovecot
 
     postfix-mailcow:
-      image: mailcow/postfix:1.68
+      image: mailcow/postfix:1.71
       depends_on:
         - mysql-mailcow
       volumes:
@@ -316,6 +317,7 @@ services:
         - REDIS_SLAVEOF_IP=${REDIS_SLAVEOF_IP:-}
         - REDIS_SLAVEOF_PORT=${REDIS_SLAVEOF_PORT:-}
         - MAILCOW_HOSTNAME=${MAILCOW_HOSTNAME}
+        - SPAMHAUS_DQS_KEY=${SPAMHAUS_DQS_KEY:-}
       cap_add:
         - NET_BIND_SERVICE
       ports:
@@ -425,7 +427,7 @@ services:
             - acme
 
     netfilter-mailcow:
-      image: mailcow/netfilter:1.50
+      image: mailcow/netfilter:1.52
       stop_grace_period: 30s
       depends_on:
         - dovecot-mailcow
@@ -510,7 +512,7 @@ services:
             - watchdog
 
     dockerapi-mailcow:
-      image: mailcow/dockerapi:2.01
+      image: mailcow/dockerapi:2.05
       security_opt:
         - label=disable
       restart: always

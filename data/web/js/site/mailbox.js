@@ -607,7 +607,7 @@ jQuery(function($){
           defaultContent: '',
           responsivePriority: 6,
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':(0==data?'<i class="bi bi-x-lg"></i>':2==data&&'&#8212;');
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':(0==data?'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>':2==data&&'&#8212;');
           }
         },
         {
@@ -754,7 +754,7 @@ jQuery(function($){
           data: 'attributes.gal',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -762,7 +762,7 @@ jQuery(function($){
           data: 'attributes.backupmx',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -770,7 +770,7 @@ jQuery(function($){
           data: 'attributes.relay_all_recipients',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -778,7 +778,7 @@ jQuery(function($){
           data: 'attributes.relay_unknown_only',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -787,7 +787,7 @@ jQuery(function($){
           defaultContent: '',
           responsivePriority: 4,
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -926,9 +926,12 @@ jQuery(function($){
               '<a href="#" data-action="delete_selected" data-id="single-mailbox" data-api-url="delete/mailbox" data-item="' + encodeURIComponent(item.username) + '" class="btn btn-xs btn-xs-half btn-danger"><i class="bi bi-trash"></i> ' + lang.remove + '</a>' +
               '</div>';
             }
-            item.in_use = '<div class="progress">' +
+            item.in_use = {
+              sortBy: item.percent_in_use,
+              value: '<div class="progress">' +
               '<div class="progress-bar-mailbox progress-bar progress-bar-' + item.percent_class + '" role="progressbar" aria-valuenow="' + item.percent_in_use + '" aria-valuemin="0" aria-valuemax="100" ' +
-              'style="min-width:2em;width:' + item.percent_in_use + '%">' + item.percent_in_use + '%' + '</div></div>';
+              'style="min-width:2em;width:' + item.percent_in_use + '%">' + item.percent_in_use + '%' + '</div></div>'
+            };
             item.username = escapeHtml(item.username);
 
             if (Array.isArray(item.tags)){
@@ -994,10 +997,11 @@ jQuery(function($){
         },
         {
           title: lang.in_use,
-          data: 'in_use',
+          data: 'in_use.value',
           defaultContent: '',
           responsivePriority: 9,
-          className: 'dt-data-w100'
+          className: 'dt-data-w100',
+          orderData: 24
         },
         {
           title: lang.fname,
@@ -1089,7 +1093,7 @@ jQuery(function($){
           defaultContent: '',
           responsivePriority: 4,
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':(0==data?'<i class="bi bi-x-lg"></i>':2==data&&'&#8212;');
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':(0==data?'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>':2==data&&'&#8212;');
           }
         },
         {
@@ -1102,7 +1106,12 @@ jQuery(function($){
         {
           title: "",
           data: 'quota.sortBy',
-          responsivePriority: 8,
+          defaultContent: '',
+          className: "d-none"
+        },
+        {
+          title: "",
+          data: 'in_use.sortBy',
           defaultContent: '',
           className: "d-none"
         },
@@ -1155,13 +1164,13 @@ jQuery(function($){
 
             item.attributes.quota = humanFileSize(item.attributes.quota);
 
-            item.attributes.tls_enforce_in = '<i class="text-' + (item.attributes.tls_enforce_in == 1 ? 'success bi bi-lock-fill' : 'danger bi bi-unlock-fill') + '"></i>';
-            item.attributes.tls_enforce_out = '<i class="text-' + (item.attributes.tls_enforce_out == 1 ? 'success bi bi-lock-fill' : 'danger bi bi-unlock-fill') + '"></i>';
-            item.attributes.pop3_access = '<i class="text-' + (item.attributes.pop3_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.pop3_access == 1 ? 'check-lg' : 'x-lg') + '"></i>';
-            item.attributes.imap_access = '<i class="text-' + (item.attributes.imap_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.imap_access == 1 ? 'check-lg' : 'x-lg') + '"></i>';
-            item.attributes.smtp_access = '<i class="text-' + (item.attributes.smtp_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.smtp_access == 1 ? 'check-lg' : 'x-lg') + '"></i>';
-            item.attributes.sieve_access = '<i class="text-' + (item.attributes.sieve_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.sieve_access == 1 ? 'check-lg' : 'x-lg') + '"></i>';
-            item.attributes.sogo_access = '<i class="text-' + (item.attributes.sogo_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.sogo_access == 1 ? 'check-lg' : 'x-lg') + '"></i>';
+            item.attributes.tls_enforce_in = '<i class="text-' + (item.attributes.tls_enforce_in == 1 ? 'success bi bi-lock-fill' : 'danger bi bi-unlock-fill') + '"><span class="sorting-value">' + (item.attributes.tls_enforce_in == 1 ? '1' : '0') + '</span></i>';
+            item.attributes.tls_enforce_out = '<i class="text-' + (item.attributes.tls_enforce_out == 1 ? 'success bi bi-lock-fill' : 'danger bi bi-unlock-fill') + '"><span class="sorting-value">' + (item.attributes.tls_enforce_out == 1 ? '1' : '0') + '</span></i>';
+            item.attributes.pop3_access = '<i class="text-' + (item.attributes.pop3_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.pop3_access == 1 ? 'check-lg' : 'x-lg') + '"><span class="sorting-value">' + (item.attributes.pop3_access == 1 ? '1' : '0') + '</span></i>';
+            item.attributes.imap_access = '<i class="text-' + (item.attributes.imap_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.imap_access == 1 ? 'check-lg' : 'x-lg') + '"><span class="sorting-value">' + (item.attributes.imap_access == 1 ? '1' : '0') + '</span></i>';
+            item.attributes.smtp_access = '<i class="text-' + (item.attributes.smtp_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.smtp_access == 1 ? 'check-lg' : 'x-lg') + '"><span class="sorting-value">' + (item.attributes.smtp_access == 1 ? '1' : '0') + '</span></i>';
+            item.attributes.sieve_access = '<i class="text-' + (item.attributes.sieve_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.sieve_access == 1 ? 'check-lg' : 'x-lg') + '"><span class="sorting-value">' + (item.attributes.sieve_access == 1 ? '1' : '0') + '</span></i>';
+            item.attributes.sogo_access = '<i class="text-' + (item.attributes.sogo_access == 1 ? 'success' : 'danger') + ' bi bi-' + (item.attributes.sogo_access == 1 ? 'check-lg' : 'x-lg') + '"><span class="sorting-value">' + (item.attributes.sogo_access == 1 ? '1' : '0') + '</span></i>';
             if (item.attributes.quarantine_notification === 'never') {
               item.attributes.quarantine_notification = lang.never;
             } else if (item.attributes.quarantine_notification === 'hourly') {
@@ -1178,7 +1187,6 @@ jQuery(function($){
             } else if (item.attributes.quarantine_category === 'all') {
               item.attributes.quarantine_category = lang.q_all;
             }
-
 
             if (item.template.toLowerCase() == "default"){
               item.action = '<div class="btn-group">' +
@@ -1320,7 +1328,7 @@ jQuery(function($){
           defaultContent: '',
           responsivePriority: 4,
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':(0==data?'<i class="bi bi-x-lg"></i>':2==data&&'&#8212;');
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':(0==data?'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>':2==data&&'&#8212;');
           }
         },
         {
@@ -1431,7 +1439,7 @@ jQuery(function($){
           data: 'active',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':(0==data?'<i class="bi bi-x-lg"></i>':2==data&&'&#8212;');
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':(0==data?'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>':2==data&&'&#8212;');
           }
         },
         {
@@ -1450,30 +1458,37 @@ jQuery(function($){
   }
   function draw_bcc_table() {
     $.get("/api/v1/get/bcc-destination-options", function(data){
+      var optgroup = "";
       // Domains
-      var optgroup = "<optgroup label='" + lang.domains + "'>";
-      $.each(data.domains, function(index, domain){
-        optgroup += "<option value='" + domain + "'>" + domain + "</option>";
-      });
-      optgroup += "</optgroup>";
-      $('#bcc-local-dest').append(optgroup);
-      // Alias domains
-      var optgroup = "<optgroup label='" + lang.domain_aliases + "'>";
-      $.each(data.alias_domains, function(index, alias_domain){
-        optgroup += "<option value='" + alias_domain + "'>" + alias_domain + "</option>";
-      });
-      optgroup += "</optgroup>"
-      $('#bcc-local-dest').append(optgroup);
-      // Mailboxes and aliases
-      $.each(data.mailboxes, function(mailbox, aliases){
-        var optgroup = "<optgroup label='" + mailbox + "'>";
-        $.each(aliases, function(index, alias){
-          optgroup += "<option value='" + alias + "'>" + alias + "</option>";
+      if (data.domains && data.domains.length > 0) {
+        optgroup = "<optgroup label='" + lang.domains + "'>";
+        $.each(data.domains, function(index, domain){
+          optgroup += "<option value='" + domain + "'>" + domain + "</option>";
         });
         optgroup += "</optgroup>";
         $('#bcc-local-dest').append(optgroup);
-      });
-      // Finish
+      }
+      // Alias domains
+      if (data.alias_domains && data.alias_domains.length > 0) {
+        optgroup = "<optgroup label='" + lang.domain_aliases + "'>";
+        $.each(data.alias_domains, function(index, alias_domain){
+          optgroup += "<option value='" + alias_domain + "'>" + alias_domain + "</option>";
+        });
+        optgroup += "</optgroup>"
+        $('#bcc-local-dest').append(optgroup);
+      }
+      // Mailboxes and aliases
+      if (data.mailboxes && Object.keys(data.mailboxes).length > 0) {
+        $.each(data.mailboxes, function(mailbox, aliases){
+          optgroup = "<optgroup label='" + mailbox + "'>";
+          $.each(aliases, function(index, alias){
+            optgroup += "<option value='" + alias + "'>" + alias + "</option>";
+          });
+          optgroup += "</optgroup>";
+          $('#bcc-local-dest').append(optgroup);
+        });
+      }
+      // Recreate picker
       $('#bcc-local-dest').selectpicker('refresh');
     });
 
@@ -1569,7 +1584,7 @@ jQuery(function($){
           data: 'active',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':(0==data?'<i class="bi bi-x-lg"></i>':2==data&&'&#8212;');
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':(0==data?'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>':2==data&&'&#8212;');
           }
         },
         {
@@ -1666,7 +1681,7 @@ jQuery(function($){
           data: 'active',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -1773,7 +1788,7 @@ jQuery(function($){
           data: 'active',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -1908,7 +1923,7 @@ jQuery(function($){
           data: 'sogo_visible',
           defaultContent: '',
           render: function(data, type){
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -1927,7 +1942,7 @@ jQuery(function($){
           defaultContent: '',
           responsivePriority: 6,
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -1942,6 +1957,10 @@ jQuery(function($){
 
     table.on('responsive-resize', function (e, datatable, columns){
       hideTableExpandCollapseBtn('#tab-mbox-aliases', '#alias_table');
+    });
+    
+    table.on( 'draw', function (){
+        $('#alias_table [data-bs-toggle="tooltip"]').tooltip();
     });
   }
   function draw_aliasdomain_table() {
@@ -2022,7 +2041,7 @@ jQuery(function($){
           data: 'active',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -2158,7 +2177,7 @@ jQuery(function($){
           data: 'active',
           defaultContent: '',
           render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>';
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
           }
         },
         {
@@ -2314,16 +2333,19 @@ jQuery(function($){
   // detect element visibility changes
   function onVisible(element, callback) {
     $(document).ready(function() {
-      element_object = document.querySelector(element);
+      let element_object = document.querySelector(element);
       if (element_object === null) return;
 
-      new IntersectionObserver((entries, observer) => {
+      let observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
           if(entry.intersectionRatio > 0) {
             callback(element_object);
+            observer.unobserve(element_object);
           }
         });
-      }).observe(element_object);
+      })
+      
+      observer.observe(element_object);
     });
   }
 

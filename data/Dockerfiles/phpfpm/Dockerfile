@@ -1,5 +1,5 @@
-FROM php:8.1-fpm-alpine3.17
-LABEL maintainer "Andre Peters <andre.peters@servercow.de>"
+FROM php:8.2-fpm-alpine3.17
+LABEL maintainer "The Infrastructure Company GmbH <info@servercow.de>"
 
 # renovate: datasource=github-tags depName=krakjoe/apcu versioning=semver-coerced
 ARG APCU_PECL_VERSION=5.1.22
@@ -12,7 +12,7 @@ ARG MEMCACHED_PECL_VERSION=3.2.0
 # renovate: datasource=github-tags depName=phpredis/phpredis versioning=semver-coerced
 ARG REDIS_PECL_VERSION=5.3.7
 # renovate: datasource=github-tags depName=composer/composer versioning=semver-coerced
-ARG COMPOSER_VERSION=2.5.1
+ARG COMPOSER_VERSION=2.5.5
 
 RUN apk add -U --no-cache autoconf \
   aspell-dev \
@@ -52,6 +52,7 @@ RUN apk add -U --no-cache autoconf \
   libxpm-dev \
   libzip \
   libzip-dev \
+  linux-headers \
   make \
   mysql-client \
   openldap-dev \
@@ -75,7 +76,7 @@ RUN apk add -U --no-cache autoconf \
     --with-webp \
     --with-xpm \
     --with-avif \
-  && docker-php-ext-install -j 4 exif gd gettext intl ldap opcache pcntl pdo pdo_mysql pspell soap sockets zip bcmath gmp \
+  && docker-php-ext-install -j 4 exif gd gettext intl ldap opcache pcntl pdo pdo_mysql pspell soap sockets sysvsem zip bcmath gmp \
      mysqli \
   && docker-php-ext-configure imap --with-imap --with-imap-ssl \
   && docker-php-ext-install -j 4 imap \
@@ -100,6 +101,7 @@ RUN apk add -U --no-cache autoconf \
     libxml2-dev \
     libxpm-dev \
     libzip-dev \
+    linux-headers \
     make \
     openldap-dev \
     pcre-dev \

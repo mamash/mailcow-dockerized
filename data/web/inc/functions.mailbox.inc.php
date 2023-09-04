@@ -1264,11 +1264,13 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             ));
           }
 
+          update_sogo_static_view($username);
           $_SESSION['return'][] = array(
             'type' => 'success',
             'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
             'msg' => array('mailbox_added', htmlspecialchars($username))
           );
+          return true;
         break;
         case 'resource':
           $domain             = idn_to_ascii(strtolower(trim($_data['domain'])), 0, INTL_IDNA_VARIANT_UTS46);
@@ -3130,7 +3132,10 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
               'msg' => array('mailbox_modified', $username)
             );
+
+            update_sogo_static_view($username);
           }
+          return true;
         break;
         case 'mailbox_templates':
           if ($_SESSION['mailcow_cc_role'] != "admin") {
@@ -3959,6 +3964,39 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             return false;
           }
           return $aliasdomaindata;
+        break;
+        case 'shared_aliases':
+          $shared_aliases = array();
+          $stmt = $pdo->query("SELECT `address` FROM `alias`
+            WHERE `goto` REGEXP ','
+            AND `address` NOT LIKE '@%'
+            AND `goto` != `address`");
+          $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+          while($row = array_shift($rows)) {
+            $domain = explode("@", $row['address'])[1];
+            if (hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $domain)) {
+              $shared_aliases[] = $row['address'];
+            }
+          }
+
+          return $shared_aliases;
+        break;
+        case 'direct_aliases':
+          $direct_aliases = array();
+          $stmt = $pdo->query("SELECT `address` FROM `alias`
+            WHERE `goto` NOT LIKE '%,%'
+            AND `address` NOT LIKE '@%'
+            AND `goto` != `address`");
+          $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+          while($row = array_shift($rows)) {
+            $domain = explode("@", $row['address'])[1];
+            if (hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $domain)) {
+              $direct_aliases[] = $row['address'];
+            }
+          }
+
+          return $direct_aliases;
         break;
         case 'domains':
           $domains = array();
@@ -4892,13 +4930,19 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             if (!empty($mailbox_details['domain']) && !empty($mailbox_details['local_part'])) {
               $maildir = $mailbox_details['domain'] . '/' . $mailbox_details['local_part'];
               $exec_fields = array('cmd' => 'maildir', 'task' => 'cleanup', 'maildir' => $maildir);
-              $maildir_gc = json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields), true);
-              if ($maildir_gc['type'] != 'success') {
-                $_SESSION['return'][] = array(
-                  'type' => 'warning',
-                  'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
-                  'msg' => 'Could not move maildir to garbage collector: ' . $maildir_gc['msg']
-                );
+
+              if (getenv("CLUSTERMODE") == "replication") {
+                // broadcast to each dovecot container
+                docker('broadcast', 'dovecot-mailcow', 'exec', $exec_fields);
+              } else {
+                $maildir_gc = json_decode(docker('post', 'dovecot-mailcow', 'exec', $exec_fields), true);
+                if ($maildir_gc['type'] != 'success') {
+                  $_SESSION['return'][] = array(
+                    'type' => 'warning',
+                    'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                    'msg' => 'Could not move maildir to garbage collector: ' . $maildir_gc['msg']
+                  );
+                }
               }
             }
             else {
@@ -4951,9 +4995,10 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $stmt->execute(array(
               ':username' => $username
             ));
-            $stmt = $pdo->prepare("DELETE FROM `sender_acl` WHERE `logged_in_as` = :username");
+            $stmt = $pdo->prepare("DELETE FROM `sender_acl` WHERE `logged_in_as` = :logged_in_as OR `send_as` = :send_as");
             $stmt->execute(array(
-              ':username' => $username
+              ':logged_in_as' => $username,
+              ':send_as' => $username
             ));
             // fk, better safe than sorry
             $stmt = $pdo->prepare("DELETE FROM `user_acl` WHERE `username` = :username");
@@ -5053,12 +5098,15 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               );
               continue;
             }
+            
+            update_sogo_static_view($username);
             $_SESSION['return'][] = array(
               'type' => 'success',
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
               'msg' => array('mailbox_removed', htmlspecialchars($username))
             );
           }
+          return true;
         break;
         case 'mailbox_templates':
           if ($_SESSION['mailcow_cc_role'] != "admin") {
@@ -5264,7 +5312,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
       }
     break;
   }
-  if ($_action != 'get' && in_array($_type, array('domain', 'alias', 'alias_domain', 'mailbox', 'resource')) && getenv('SKIP_SOGO') != "y") {
+  if ($_action != 'get' && in_array($_type, array('domain', 'alias', 'alias_domain', 'resource')) && getenv('SKIP_SOGO') != "y") {
     update_sogo_static_view();
   }
 }

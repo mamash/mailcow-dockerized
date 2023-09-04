@@ -50,6 +50,12 @@
                         </div></td>
                       </tr>
                       <tr>
+                        <td>{{ lang.debug.architecture }}</td>
+                        <td class="text-break"><div>
+                          <p id="host_architecture">-</p>
+                        </div></td>
+                      </tr>
+                      <tr>
                         <td>IPs</td>
                         <td class="text-break">
                           {% if ip_check == 1 %}
@@ -70,7 +76,7 @@
                         <td>Version</td>
                         <td class="text-break">
                           <div class="fw-bolder">
-                            <p ><a href="#" id="maiclow_version">{{ mailcow_info.version_tag }}</a></p>
+                            <p ><a href="#" id="mailcow_version">{{ mailcow_info.version_tag }}</a></p>
                             <p id="mailcow_update"></p>
                           </div>
                         </td>
@@ -491,8 +497,8 @@
             <legend>{{ lang.debug.history_all_servers }}</legend><hr />
             <a class="btn btn-sm btn-secondary dropdown-toggle mb-4" data-bs-toggle="dropdown" href="#">{{ lang.mailbox.quick_actions }}</a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item add_log_lines" data-post-process="rspamd_history" data-table="rspamd_history" data-log-url="rspamd_history" data-nrows="100" href="#">+ 100</a></li>
-              <li><a class="dropdown-item add_log_lines" data-post-process="rspamd_history" data-table="rspamd_history" data-log-url="rspamd_history" data-nrows="1000" href="#">+ 1000</a></li>
+              <li><a class="dropdown-item add_log_lines" data-post-process="rspamd_history" data-table="rspamd_history" data-log-url="rspamd-history" data-nrows="100" href="#">+ 100</a></li>
+              <li><a class="dropdown-item add_log_lines" data-post-process="rspamd_history" data-table="rspamd_history" data-log-url="rspamd-history" data-nrows="1000" href="#">+ 1000</a></li>
               <li class="table_collapse_option"><hr class="dropdown-divider"></li>
               <li class="table_collapse_option"><a class="dropdown-item" data-datatables-expand="rspamd_history" data-table="rspamd_history" href="#">{{ lang.datatables.expand_all }}</a></li>
               <li class="table_collapse_option"><a class="dropdown-item" data-datatables-collapse="rspamd_history" data-table="rspamd_history" href="#">{{ lang.datatables.collapse_all }}</a></li>
@@ -612,7 +618,7 @@
               <li class="table_collapse_option"><a class="dropdown-item" data-datatables-expand="rl_log" data-table="rl_log" href="#">{{ lang.datatables.expand_all }}</a></li>
               <li class="table_collapse_option"><a class="dropdown-item" data-datatables-collapse="rl_log" data-table="rl_log" href="#">{{ lang.datatables.collapse_all }}</a></li>
             </ul>
-            <p class="text-muted">{{ lang.admin.hash_remove_info }}</p>
+            <p class="text-muted">{{ lang.admin.hash_remove_info|raw }}</p>
             <table id="rl_log" class="table table-striped dt-responsive w-100"></table>
           </div>
         </div>
