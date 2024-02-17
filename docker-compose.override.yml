@@ -1,0 +1,14 @@
+services:
+  dovecot-mailcow:
+    labels:
+      ofelia.job-exec.dovecot_recalc_quota.schedule: "@every 24h"
+      ofelia.job-exec.dovecot_recalc_quota.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && doveadm quota recalc -A || exit 0\""
+  postfix-mailcow:
+    build: ./data/Dockerfiles/postfix
+
+volumes:
+  vmail-vol-1:
+    driver_opts:
+      type: none
+      device: /mnt/mailcow/vmail
+      o: bind
