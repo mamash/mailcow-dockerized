@@ -1,3 +1,9 @@
 [submodule "data/Dockerfiles/mailman"]
 	path = data/Dockerfiles/mailman
 	url = git@github.com:mamash/docker-mailman.git
+[submodule "data/web/dmarc"]
+	path = data/web/dmarc
+	url = git@github.com:techsneeze/dmarcts-report-viewer.git
+[submodule "data/Dockerfiles/dmarc"]
+	path = data/Dockerfiles/dmarc
+	url = git@github.com:mamash/mailcow-dmarc.git
