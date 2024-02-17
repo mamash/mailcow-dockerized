@@ -17,6 +17,9 @@ volumes:
 services:
   dovecot-mailcow:
     build: ./data/Dockerfiles/dovecot
+    labels:
+      ofelia.job-exec.dovecot_recalc_quota.schedule: "@every 24h"
+      ofelia.job-exec.dovecot_recalc_quota.command: "/bin/bash -c \"[[ $${MASTER} == y ]] && doveadm quota recalc -A || exit 0\""
     logging:
       options:
         max-size: "5m"
