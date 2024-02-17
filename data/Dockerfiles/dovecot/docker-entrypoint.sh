@@ -426,9 +426,6 @@ EOF
   fi
 fi
 
-# Collect SA rules once now
-/usr/local/bin/sa-rules.sh
-
 # Run hooks
 for file in /hooks/*; do
   if [ -x "${file}" ]; then
