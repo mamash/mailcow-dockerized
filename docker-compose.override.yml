@@ -1,0 +1,6 @@
+volumes:
+  vmail-vol-1:
+    driver_opts:
+      type: none
+      device: /mnt/mailcow/vmail
+      o: bind
