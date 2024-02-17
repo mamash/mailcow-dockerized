@@ -6,3 +6,99 @@ volumes:
       type: none
       device: /mnt/mailcow/vmail
       o: bind
+
+services:
+  dovecot-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  postfix-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  php-fpm-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  unbound-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  mysql-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  redis-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  clamd-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  rspamd-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  sogo-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  memcached-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  nginx-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  acme-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  netfilter-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  watchdog-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  dockerapi-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  solr-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  olefy-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  ofelia-mailcow:
+    logging:
+      options:
+        max-size: "5m"
+
+  ipv6nat-mailcow:
+    logging:
+      options:
+        max-size: "5m"
