@@ -9,16 +9,19 @@ volumes:
 
 services:
   dovecot-mailcow:
+    build: ./data/Dockerfiles/dovecot
     logging:
       options:
         max-size: "5m"
 
   postfix-mailcow:
+    build: ./data/Dockerfiles/postfix
     logging:
       options:
         max-size: "5m"
 
   php-fpm-mailcow:
+    build: ./data/Dockerfiles/phpfpm
     logging:
       options:
         max-size: "5m"
