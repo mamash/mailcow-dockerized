@@ -135,6 +135,11 @@ query = SELECT GROUP_CONCAT(transport SEPARATOR '') AS transport_maps
                 WHERE alias.active = '1'
                   AND alias.address = '%s'
                   AND alias.address NOT LIKE '@%%'
+            UNION
+            SELECT sender_acl.logged_in_as from sender_acl
+              JOIN mailbox ON mailbox.username = sender_acl.logged_in_as
+                WHERE sender_acl.external = '1'
+                  AND sender_acl.send_as = '%s'
             )
           )
       ),
@@ -202,6 +207,11 @@ query = SELECT CONCAT_WS(':', username, password) AS auth_data FROM relayhosts
                 WHERE alias.active = '1'
                   AND alias.address = '%s'
                   AND alias.address NOT LIKE '@%%'
+            UNION
+            SELECT sender_acl.logged_in_as from sender_acl
+              JOIN mailbox ON mailbox.username = sender_acl.logged_in_as
+                WHERE sender_acl.external = '1'
+                  AND sender_acl.send_as = '%s'
           )
         )
       )
