@@ -168,3 +168,24 @@ services:
     logging:
       options:
         max-size: "5m"
+
+  logz:
+    image: "logzio/docker-collector-logs:latest"
+    container_name: logz
+    environment:
+      - "LOGZIO_TOKEN=${LOGZIO_TOKEN}"
+      - "LOGZIO_REGION=eu"
+      - "HOSTNAME=perry"
+      - "skipContainerName=backup,dockerapi,olefy,logz,metrics,nginx,redis,sogo,solr,watchdog,ofelia"
+      - "excludeLines=CRON,forwardinghosts,wp-login"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    restart: always
+    networks:
+      mailcow-network:
+        aliases:
+          - logz
+    logging:
+      options:
+        max-size: "5m"
