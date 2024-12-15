@@ -1,4 +1,4 @@
-FROM alpine:3.19
+FROM alpine:3.21.0
 LABEL maintainer "The Infrastructure Company GmbH <info@servercow.de>"
 
 ARG PIP_BREAK_SYSTEM_PACKAGES=1
