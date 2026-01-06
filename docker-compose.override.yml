@@ -1,5 +1,3 @@
-version: '2.1'
-
 volumes:
   vmail-vol-1:
     driver_opts:
@@ -105,11 +103,6 @@ services:
       options:
         max-size: "5m"
 
-  ipv6nat-mailcow:
-    logging:
-      options:
-        max-size: "5m"
-
   mailman:
     build: data/Dockerfiles/mailman
     environment:
@@ -132,6 +125,28 @@ services:
       mailcow-network:
         aliases:
           - mailman
+    logging:
+      options:
+        max-size: "5m"
+
+  logz:
+    image: "logzio/docker-logs-collector:latest"
+    container_name: logz
+    environment:
+      - "LOGZIO_LOGZ_TOKEN=${LOGZIO_TOKEN}"
+      - "LOGZIO_URL=https://listener-eu.logz.io:8071"
+      - "HOSTNAME=perry"
+      - "SET_FIELDS=host:perry"
+      - "SKIP_CONTAINER_NAMES=backup,dockerapi,olefy,logz,metrics,nginx,redis,sogo,solr,watchdog,ofelia"
+      - "EXCLUDE_LINES=CRON,forwardinghosts,wp-login"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    restart: always
+    networks:
+      mailcow-network:
+        aliases:
+          - logz
     logging:
       options:
         max-size: "5m"
