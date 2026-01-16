@@ -1,4 +1,4 @@
-FROM alpine:3.21 AS builder
+FROM alpine:3.23.2 AS builder
 
 WORKDIR /src
 ENV CLAMD_VERSION=1.4.2
@@ -68,7 +68,7 @@ RUN wget -P /src https://www.clamav.net/downloads/production/clamav-${CLAMD_VERS
   "/clamav/etc/clamav/clamav-milter.conf.sample" > "/clamav/etc/clamav/clamav-milter.conf" || exit 1
 
 
-FROM alpine:3.21
+FROM alpine:3.23.2
 
 LABEL maintainer = "The Infrastructure Company GmbH <info@servercow.de>"
 
